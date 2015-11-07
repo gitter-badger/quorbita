@@ -80,7 +80,21 @@ public enum LuaQScripts {
   // redis.call('lpush', KEYS[4], ARGV[2]);
   // return true;
   REPUBLISH(
-      "if ARGV[3] then redis.call('hset', KEYS[3], ARGV[2], ARGV[3]); end redis.call('zadd', KEYS[1], 'NX', ARGV[1], ARGV[2]); redis.call('zrem', KEYS[2], ARGV[2]); redis.call('lpush', KEYS[4], ARGV[2]); return true;");
+      "if ARGV[3] then redis.call('hset', KEYS[3], ARGV[2], ARGV[3]); end redis.call('zadd', KEYS[1], 'NX', ARGV[1], ARGV[2]); redis.call('zrem', KEYS[2], ARGV[2]); redis.call('lpush', KEYS[4], ARGV[2]); return true;"),
+
+  // REPUBLISH_BEFORE
+  // KEYS: idsKey claimedIdsKey notifyList
+  // ARGS: republishMaxScore score
+  //
+  // local republishTable = redis.call('zrangebyscore', KEYS[2], '-inf', ARGV[1]);
+  // if next(republishTable) == nil then return 0; end
+  // for i, id in pairs(republishTable) do
+  // __ redis.call('zadd', KEYS[1], 'NX', ARGV[2], id);
+  // __ redis.call('lpush', KEYS[3], id);
+  // end
+  // return redis.call('zremrangebyscore', KEYS[2], '-inf', ARGV[1]);
+  REPUBLISH_BEFORE(
+      "local republishTable = redis.call('zrangebyscore', KEYS[2], '-inf', ARGV[1]); if next(republishTable) == nil then return 0; end for i, id in pairs(republishTable) do redis.call('zadd', KEYS[1], 'NX', ARGV[2], id); redis.call('lpush', KEYS[3], id); end return redis.call('zremrangebyscore', KEYS[2], '-inf', ARGV[1]);");
 
   private transient final String luaScript;
   private transient final String sha1;

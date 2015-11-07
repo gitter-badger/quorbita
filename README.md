@@ -31,7 +31,7 @@ final List<String> idPayload =
 
 final String id = idPayload.get(0);
 if (id == null)
-  return;
+  break;
 
 final String payload = idPayload.get(1);
 System.out.println(String

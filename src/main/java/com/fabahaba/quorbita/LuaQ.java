@@ -9,7 +9,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 
-public class LuaQ {
+public class LuaQ implements QuorbitaQ {
+
+  public static final int DEFAULT_REMOVE_ORPHAN_PAYLOADS_BATCH_SIZE = 100;
 
   public static final String PUBLISHED_POSTFIX = ":PUBLISHED";
   public static final String CLAIMED_POSTFIX = ":CLAIMED";
@@ -26,6 +28,7 @@ public class LuaQ {
   private final List<byte[]> keys;
 
   public LuaQ(final JedisExecutor jedisExecutor, final String qName) {
+
     this.jedisExecutor = jedisExecutor;
     this.qName = qName;
     this.publishedQKey = (qName + PUBLISHED_POSTFIX).getBytes(StandardCharsets.UTF_8);
@@ -36,32 +39,44 @@ public class LuaQ {
   }
 
   protected JedisExecutor getJedisExecutor() {
-    return this.jedisExecutor;
+    return jedisExecutor;
   }
 
-  public Long publish(final String id, final byte[] payload) {
+  @Override
+  public Long publish(final String id, final byte[] payload, final int numRetries) {
 
     return LuaQFunctions.publish(jedisExecutor, id.getBytes(StandardCharsets.UTF_8), payload,
-        publishedQKey, claimedQKey, payloadsHashKey, notifyListKey);
+        publishedQKey, claimedQKey, payloadsHashKey, notifyListKey, numRetries);
   }
 
-  public Long mpublish(final Collection<byte[]> idPayloads) {
+  @Override
+  public Long mpublish(final Collection<byte[]> idPayloads, final int numRetries) {
 
-    return LuaQFunctions.mpublish(jedisExecutor, keys, idPayloads);
+    return LuaQFunctions.mpublish(jedisExecutor, keys, idPayloads, numRetries);
   }
 
-  public Long republish(final String id) {
+  @Override
+  public Long republish(final String id, final int numRetries) {
 
     return LuaQFunctions.republish(jedisExecutor, id.getBytes(StandardCharsets.UTF_8),
-        publishedQKey, claimedQKey, payloadsHashKey, notifyListKey);
+        publishedQKey, claimedQKey, payloadsHashKey, notifyListKey, numRetries);
   }
 
-  public Long republishAs(final String id, final byte[] payload) {
+  @Override
+  public Long republishAs(final String id, final byte[] payload, final int numRetries) {
 
     return LuaQFunctions.republishAs(jedisExecutor, id.getBytes(StandardCharsets.UTF_8), payload,
-        publishedQKey, claimedQKey, payloadsHashKey, notifyListKey);
+        publishedQKey, claimedQKey, payloadsHashKey, notifyListKey, numRetries);
   }
 
+  @Override
+  public Long republishClaimedBefore(final byte[] before, final int numRetries) {
+
+    return LuaQFunctions.republishClaimedBefore(jedisExecutor, publishedQKey, claimedQKey,
+        notifyListKey, before, numRetries);
+  }
+
+  @Override
   public List<byte[]> claim(final int timeoutSeconds) {
 
     return LuaQFunctions.claim(jedisExecutor, publishedQKey, claimedQKey, payloadsHashKey,
@@ -73,21 +88,29 @@ public class LuaQ {
     return LuaQFunctions.remove(jedisExecutor, publishedQKey, payloadsHashKey, numRetries, ids);
   }
 
+  @Override
   public long removeClaimed(final int numRetries, final String... ids) {
 
     return LuaQFunctions.remove(jedisExecutor, claimedQKey, payloadsHashKey, numRetries, ids);
   }
 
+  @Override
   public long remove(final int numRetries, final String... ids) {
 
     return LuaQFunctions.remove(jedisExecutor, publishedQKey, claimedQKey, payloadsHashKey,
         numRetries, ids);
   }
 
+  @Override
   public void clear(final int numRetries) {
 
     LuaQFunctions.clear(jedisExecutor, publishedQKey, claimedQKey, payloadsHashKey, notifyListKey,
         numRetries);
+  }
+
+  public List<byte[]> removeOrphanedPayloads() {
+
+    return removeOrphanedPayloads(DEFAULT_REMOVE_ORPHAN_PAYLOADS_BATCH_SIZE);
   }
 
   public List<byte[]> removeOrphanedPayloads(final int batchSize) {
@@ -96,8 +119,9 @@ public class LuaQ {
         payloadsHashKey, batchSize);
   }
 
+  @Override
   public String getQName() {
-    return this.qName;
+    return qName;
   }
 
   @Override

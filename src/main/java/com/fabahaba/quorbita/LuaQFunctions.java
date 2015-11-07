@@ -22,40 +22,51 @@ public final class LuaQFunctions {
 
   public static Long publish(final JedisExecutor jedisExecutor, final byte[] id,
       final byte[] payload, final byte[] publishedQKey, final byte[] claimedQKey,
-      final byte[] payloadsHashKey, final byte[] notifyListKey) {
+      final byte[] payloadsHashKey, final byte[] notifyListKey, final int numRetries) {
 
     return (Long) jedisExecutor.applyJedis(jedis -> jedis.evalsha(LuaQScripts.PUBLISH
         .getSha1Bytes().array(), 4, publishedQKey, claimedQKey, payloadsHashKey, notifyListKey,
-        LuaQFunctions.getEpochMillisBytes(), id, payload));
+        LuaQFunctions.getEpochMillisBytes(), id, payload), numRetries);
   }
 
   public static Long mpublish(final JedisExecutor jedisExecutor, final List<byte[]> keys,
-      final Collection<byte[]> idPayloads) {
+      final Collection<byte[]> idPayloads, final int numRetries) {
 
     final List<byte[]> args = new ArrayList<>(idPayloads.size() + 1);
     args.add(LuaQFunctions.getEpochMillisBytes());
     args.addAll(idPayloads);
 
-    return (Long) jedisExecutor.applyJedis(jedis -> jedis.evalsha(LuaQScripts.MPUBLISH
-        .getSha1Bytes().array(), keys, args));
+    return (Long) jedisExecutor
+        .applyJedis(
+            jedis -> jedis.evalsha(LuaQScripts.MPUBLISH.getSha1Bytes().array(), keys, args),
+            numRetries);
   }
 
   public static Long republishAs(final JedisExecutor jedisExecutor, final byte[] id,
       final byte[] payload, final byte[] publishedQKey, final byte[] claimedQKey,
-      final byte[] payloadsHashKey, final byte[] notifyListKey) {
+      final byte[] payloadsHashKey, final byte[] notifyListKey, final int numRetries) {
 
     return (Long) jedisExecutor.applyJedis(jedis -> jedis.evalsha(LuaQScripts.REPUBLISH
         .getSha1Bytes().array(), 4, publishedQKey, claimedQKey, payloadsHashKey, notifyListKey,
-        LuaQFunctions.getEpochMillisBytes(), id, payload));
+        LuaQFunctions.getEpochMillisBytes(), id, payload), numRetries);
   }
 
   public static Long republish(final JedisExecutor jedisExecutor, final byte[] id,
       final byte[] publishedQKey, final byte[] claimedQKey, final byte[] payloadsHashKey,
-      final byte[] notifyListKey) {
+      final byte[] notifyListKey, final int numRetries) {
 
     return (Long) jedisExecutor.applyJedis(jedis -> jedis.evalsha(LuaQScripts.REPUBLISH
         .getSha1Bytes().array(), 4, publishedQKey, claimedQKey, payloadsHashKey, notifyListKey,
-        LuaQFunctions.getEpochMillisBytes(), id));
+        LuaQFunctions.getEpochMillisBytes(), id), numRetries);
+  }
+
+  public static Long republishClaimedBefore(final JedisExecutor jedisExecutor,
+      final byte[] publishedQKey, final byte[] claimedQKey, final byte[] notifyListKey,
+      final byte[] before, final int numRetries) {
+
+    return (Long) jedisExecutor.applyJedis(jedis -> jedis.evalsha(LuaQScripts.REPUBLISH_BEFORE
+        .getSha1Bytes().array(), 3, publishedQKey, claimedQKey, notifyListKey, before,
+        LuaQFunctions.getEpochMillisBytes()), numRetries);
   }
 
   public static List<byte[]> claim(final JedisExecutor jedisExecutor, final byte[] publishedQKey,
