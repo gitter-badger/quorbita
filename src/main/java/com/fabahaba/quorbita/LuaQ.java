@@ -1,6 +1,6 @@
 package com.fabahaba.quorbita;
 
-import com.fabahaba.jedipus.JedisSentinelPoolExecutor;
+import com.fabahaba.jedipus.JedisExecutor;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
@@ -16,7 +16,7 @@ public class LuaQ {
   public static final String PAYLOADS_POSTFIX = ":PAYLOADS";
   public static final String NOTIFY_POSTFIX = ":NOTIFY";
 
-  private final JedisSentinelPoolExecutor jedisExecutor;
+  private final JedisExecutor jedisExecutor;
 
   private final String qName;
   private final byte[] publishedQKey;
@@ -25,7 +25,7 @@ public class LuaQ {
   private final byte[] notifyListKey;
   private final List<byte[]> keys;
 
-  public LuaQ(final JedisSentinelPoolExecutor jedisExecutor, final String qName) {
+  public LuaQ(final JedisExecutor jedisExecutor, final String qName) {
     this.jedisExecutor = jedisExecutor;
     this.qName = qName;
     this.publishedQKey = (qName + PUBLISHED_POSTFIX).getBytes(StandardCharsets.UTF_8);
@@ -35,7 +35,7 @@ public class LuaQ {
     this.keys = ImmutableList.of(publishedQKey, claimedQKey, payloadsHashKey, notifyListKey);
   }
 
-  protected JedisSentinelPoolExecutor getJedisExecutor() {
+  protected JedisExecutor getJedisExecutor() {
     return this.jedisExecutor;
   }
 
