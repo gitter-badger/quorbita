@@ -59,7 +59,7 @@ public class LuaQ implements QuorbitaQ {
   @Override
   public Long publish(final Collection<byte[]> idPayloads, final int numRetries) {
 
-    return LuaQFunctions.mpublish(jedisExecutor, keys, idPayloads, numRetries);
+    return LuaQFunctions.publish(jedisExecutor, keys, idPayloads, numRetries);
   }
 
   @Override

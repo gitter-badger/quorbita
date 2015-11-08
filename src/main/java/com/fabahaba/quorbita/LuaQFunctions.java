@@ -31,7 +31,7 @@ public final class LuaQFunctions {
         LuaQFunctions.getEpochMillisBytes(), id, payload), numRetries);
   }
 
-  public static Long mpublish(final JedisExecutor jedisExecutor, final List<byte[]> keys,
+  public static Long publish(final JedisExecutor jedisExecutor, final List<byte[]> keys,
       final Collection<byte[]> idPayloads, final int numRetries) {
 
     final List<byte[]> args = new ArrayList<>(idPayloads.size() + 1);

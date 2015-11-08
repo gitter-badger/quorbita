@@ -99,7 +99,7 @@ public enum LuaQScripts {
   KILL(
       "if ARGV[3] then redis.call('hset', KEYS[3], ARGV[2], ARGV[3]); end redis.call('zadd', KEYS[1], 'NX', ARGV[1], ARGV[2]); redis.call('zrem', KEYS[2], ARGV[2]); return true;"),
 
-  // REPUBLISH_BEFORE
+  // Returns the number republished.
   // KEYS: idsKey claimedIdsKey notifyList
   // ARGS: republishMaxScore score
   //
@@ -113,7 +113,7 @@ public enum LuaQScripts {
   REPUBLISH_BEFORE(
       "local republishTable = redis.call('zrangebyscore', KEYS[2], '-inf', ARGV[1]); if next(republishTable) == nil then return 0; end for i, id in pairs(republishTable) do redis.call('zadd', KEYS[1], 'NX', ARGV[2], id); redis.call('lpush', KEYS[3], id); end return redis.call('zremrangebyscore', KEYS[2], '-inf', ARGV[1]);"),
 
-  // SCAN_SET_PAYLOADS
+  // Returns the current cusor and a list of byte[] lists containging an id, score and payload each.
   // KEYS: zKey payloadsHashKey
   // ARGS: cursor count
   //
