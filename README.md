@@ -13,30 +13,34 @@ quorbitaLuaQ.clear();
 
 quorbitaLuaQ.publish("ID-1", "PAYLOAD-1".getBytes(StandardCharsets.UTF_8));
 
-final List<byte[]> messages =
-  ImmutableList.of("ID-2".getBytes(StandardCharsets.UTF_8),
-      "PAYLOAD-2".getBytes(StandardCharsets.UTF_8), "ID-3".getBytes(StandardCharsets.UTF_8),
-      "PAYLOAD-3".getBytes(StandardCharsets.UTF_8));
-quorbitaLuaQ.mpublish(messages);
+final List<byte[]> idPayloads =
+    ImmutableList.of("ID-2".getBytes(StandardCharsets.UTF_8),
+        "PAYLOAD-2".getBytes(StandardCharsets.UTF_8), "ID-3".getBytes(StandardCharsets.UTF_8),
+        "PAYLOAD-3".getBytes(StandardCharsets.UTF_8));
+quorbitaLuaQ.publish(idPayloads);
 
 final int blockingClaimTimeoutSeconds = 3;
 
 for (;;) {
-   final List<String> idPayload =
-       quorbitaLuaQ.claim(blockingClaimTimeoutSeconds).stream()
-           .map(i -> i == null ? null : new String(i, StandardCharsets.UTF_8))
-           .collect(Collectors.toList());
+  final List<byte[]> idPayload = quorbitaLuaQ.claim(blockingClaimTimeoutSeconds);
 
-   final String id = idPayload.get(0);
-   if (id == null)
-     break;
+  final byte[] idBytes = idPayload.get(0);
+  if (idBytes == null) {
+    break;
+  }
 
-   final String payload = idPayload.get(1);
-   System.out.println(String
-       .format("Claimed message with id '%s' and payload '%s'", id, payload));
+  final String id = new String(idBytes, StandardCharsets.UTF_8);
+  final String payload = new String(idPayload.get(1), StandardCharsets.UTF_8);
 
-   quorbitaLuaQ.removeClaimed(id);
+  System.out.println(String
+      .format("Claimed message with id '%s' and payload '%s'", id, payload));
+
+  quorbitaLuaQ.removeClaimed(id);
+  // quorbitaLuaQ.checkin(id)
 }
+
+// republish abandoned ids
+// quorbitaLuaQ.republishClaimedBefore(System.currentTimeMillis() - 60000);
 ```
 
 ###Dependency Management
