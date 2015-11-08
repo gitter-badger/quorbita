@@ -1,5 +1,7 @@
 package com.fabahaba.quorbita;
 
+import com.fabahaba.jedipus.JedisExecutor;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
@@ -15,6 +17,8 @@ public interface QuorbitaQ {
 
   public String getQName();
 
+  public JedisExecutor getJedisExecutor();
+
   default Long publish(final String id, final byte[] payload) {
 
     return publish(id, payload, getDefaultNumRetries());
@@ -22,12 +26,12 @@ public interface QuorbitaQ {
 
   public Long publish(final String id, final byte[] payload, final int numRetries);
 
-  default Long mpublish(final Collection<byte[]> idPayloads) {
+  default Long publish(final Collection<byte[]> idPayloads) {
 
-    return mpublish(idPayloads, getDefaultNumRetries());
+    return publish(idPayloads, getDefaultNumRetries());
   }
 
-  public Long mpublish(final Collection<byte[]> idPayloads, final int numRetries);
+  public Long publish(final Collection<byte[]> idPayloads, final int numRetries);
 
   default Long republish(final String id) {
 
@@ -87,6 +91,13 @@ public interface QuorbitaQ {
   public List<byte[]> claim();
 
   public List<byte[]> claim(final int timeoutSeconds);
+
+  default Long checkin(final String id) {
+
+    return checkin(id, getDefaultNumRetries());
+  }
+
+  public Long checkin(final String id, final int numRetries);
 
   default long removeClaimed(final String... ids) {
 

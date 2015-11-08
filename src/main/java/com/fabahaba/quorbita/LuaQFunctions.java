@@ -133,6 +133,13 @@ public final class LuaQFunctions {
         claimedQKey, payloadsHashKey, notifyListKey, LuaQFunctions.getEpochMillisBytes());
   }
 
+  public static Long checkin(final JedisExecutor jedisExecutor, final byte[] claimedQKey,
+      final byte[] id) {
+
+    return (Long) jedisExecutor.applyJedis(jedis -> jedis.evalsha(LuaQScripts.CHECKIN
+        .getSha1Bytes().array(), 1, claimedQKey, LuaQFunctions.getEpochMillisBytes(), id));
+  }
+
   public static String getEpochMillisString() {
 
     return String.valueOf(System.currentTimeMillis());

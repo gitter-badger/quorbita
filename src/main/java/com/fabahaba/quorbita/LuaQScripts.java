@@ -34,6 +34,12 @@ public enum LuaQScripts {
   CLAIM(
       "while true do local id = redis.call('zrange', KEYS[1], 0, 0)[1]; if id == nil then return {false, false}; end redis.call('lpop', KEYS[4]); local numAdded = redis.call('zadd', KEYS[2], 'NX', ARGV[1], id); redis.call('zremrangebyrank', KEYS[1], 0, 0); if numAdded > 0 then if KEYS[3] then return {id, redis.call('hget', KEYS[3], id)}; end return {id, false}; end end"),
 
+  // CHECKIN
+  // KEYS: claimedIdsKey
+  // ARGS: score id
+  //
+  CHECKIN("return redis.call('zadd', KEYS[1], 'XX', 'CH', ARGV[1], ARGV[2]);"),
+
   // Returns 1 if added, 0 if already exists and -1 if it is already claimed.
   // KEYS: idsKey claimedIdsKey payloadsHashKey notifyList
   // ARGS: score id payload

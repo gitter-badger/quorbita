@@ -43,7 +43,8 @@ public class LuaQ implements QuorbitaQ {
     this.keys = ImmutableList.of(publishedQKey, claimedQKey, payloadsHashKey, notifyListKey);
   }
 
-  protected JedisExecutor getJedisExecutor() {
+  @Override
+  public JedisExecutor getJedisExecutor() {
     return jedisExecutor;
   }
 
@@ -55,7 +56,7 @@ public class LuaQ implements QuorbitaQ {
   }
 
   @Override
-  public Long mpublish(final Collection<byte[]> idPayloads, final int numRetries) {
+  public Long publish(final Collection<byte[]> idPayloads, final int numRetries) {
 
     return LuaQFunctions.mpublish(jedisExecutor, keys, idPayloads, numRetries);
   }
@@ -107,6 +108,12 @@ public class LuaQ implements QuorbitaQ {
 
     return LuaQFunctions.claim(jedisExecutor, publishedQKey, claimedQKey, payloadsHashKey,
         notifyListKey, timeoutSeconds);
+  }
+
+  @Override
+  public Long checkin(final String id, final int numRetries) {
+
+    return LuaQFunctions.checkin(jedisExecutor, claimedQKey, id.getBytes(StandardCharsets.UTF_8));
   }
 
   public long removePublished(final int numRetries, final String... ids) {
