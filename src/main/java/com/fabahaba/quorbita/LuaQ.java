@@ -2,7 +2,6 @@ package com.fabahaba.quorbita;
 
 import com.fabahaba.jedipus.JedisExecutor;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
 import redis.clients.jedis.Response;
@@ -10,6 +9,7 @@ import redis.clients.jedis.Response;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public class LuaQ implements QuorbitaQ {
@@ -182,32 +182,6 @@ public class LuaQ implements QuorbitaQ {
   }
 
   @Override
-  public String getQName() {
-    return qName;
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this).add("jedisExecutor", jedisExecutor).add("qName", qName)
-        .toString();
-  }
-
-  @Override
-  public boolean equals(final Object other) {
-    if (this == other)
-      return true;
-    if (!(other instanceof LuaQ))
-      return false;
-    final LuaQ castOther = (LuaQ) other;
-    return Objects.equal(qName, castOther.qName);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hashCode(qName);
-  }
-
-  @Override
   public void scanClaimedPayloads(final Consumer<List<List<byte[]>>> idScorePayloadsConsumer) {
 
     LuaQFunctions.scanZSetPayloads(jedisExecutor, claimedQKey, payloadsHashKey,
@@ -225,5 +199,32 @@ public class LuaQ implements QuorbitaQ {
   public void scanDeadPayloads(final Consumer<List<List<byte[]>>> idScorePayloadsConsumer) {
 
     LuaQFunctions.scanZSetPayloads(jedisExecutor, dlqKey, payloadsHashKey, idScorePayloadsConsumer);
+  }
+
+  @Override
+  public String getQName() {
+    return qName;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("jedisExecutor", jedisExecutor).add("qName", qName)
+        .toString();
+  }
+
+  @Override
+  public boolean equals(final Object other) {
+    if (this == other)
+      return true;
+    if (!(other instanceof LuaQ))
+      return false;
+    final LuaQ castOther = (LuaQ) other;
+    return Objects.equals(jedisExecutor, castOther.jedisExecutor)
+        && Objects.equals(qName, castOther.qName);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(jedisExecutor, qName);
   }
 }
