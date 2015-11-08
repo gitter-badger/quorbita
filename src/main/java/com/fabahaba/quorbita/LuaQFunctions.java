@@ -10,11 +10,13 @@ import redis.clients.jedis.Response;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public final class LuaQFunctions {
 
@@ -233,5 +235,36 @@ public final class LuaQFunctions {
     }
 
     return removePayloadKeys;
+  }
+
+  private static final byte[] SCAN_SENTINEL_CURSOR = "0".getBytes(StandardCharsets.UTF_8);
+  private static final byte[] DEFAULT_COUNT = "10".getBytes(StandardCharsets.UTF_8);
+
+  public static void scanZSetPayloads(final JedisExecutor jedisExecutor, final byte[] zKey,
+      final byte[] payloadsHashKey, final Consumer<List<List<byte[]>>> idScorePayloadsConsumer) {
+
+    LuaQFunctions.scanZSetPayloads(jedisExecutor, zKey, payloadsHashKey, DEFAULT_COUNT,
+        idScorePayloadsConsumer);
+  }
+
+  @SuppressWarnings("unchecked")
+  public static void scanZSetPayloads(final JedisExecutor jedisExecutor, final byte[] zKey,
+      final byte[] payloadsHashKey, final byte[] count,
+      final Consumer<List<List<byte[]>>> idScorePayloadsConsumer) {
+
+    for (byte[] cursor = SCAN_SENTINEL_CURSOR;;) {
+
+      final byte[] finalCursorRef = cursor;
+
+      final List<?> results =
+          (List<?>) jedisExecutor.applyJedis(jedis -> jedis.evalsha(LuaQScripts.SCAN_ZSET_PAYLOADS
+              .getSha1Bytes().array(), 2, zKey, payloadsHashKey, finalCursorRef, count));
+
+      cursor = (byte[]) results.get(0);
+
+      idScorePayloadsConsumer.accept((List<List<byte[]>>) results.get(1));
+      if (Arrays.equals(cursor, SCAN_SENTINEL_CURSOR))
+        return;
+    }
   }
 }

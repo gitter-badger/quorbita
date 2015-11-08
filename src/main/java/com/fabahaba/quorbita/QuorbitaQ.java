@@ -5,6 +5,7 @@ import com.fabahaba.jedipus.JedisExecutor;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
 
 public interface QuorbitaQ {
 
@@ -128,4 +129,10 @@ public interface QuorbitaQ {
   public Long getQSize();
 
   public Long getDLQSize();
+
+  public void scanPublishedPayloads(final Consumer<List<List<byte[]>>> idScorePayloadsConsumer);
+
+  public void scanClaimedPayloads(final Consumer<List<List<byte[]>>> idScorePayloadsConsumer);
+
+  public void scanDeadPayloads(final Consumer<List<List<byte[]>>> idScorePayloadsConsumer);
 }

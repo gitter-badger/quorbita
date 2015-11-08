@@ -111,7 +111,23 @@ public enum LuaQScripts {
   // end
   // return redis.call('zremrangebyscore', KEYS[2], '-inf', ARGV[1]);
   REPUBLISH_BEFORE(
-      "local republishTable = redis.call('zrangebyscore', KEYS[2], '-inf', ARGV[1]); if next(republishTable) == nil then return 0; end for i, id in pairs(republishTable) do redis.call('zadd', KEYS[1], 'NX', ARGV[2], id); redis.call('lpush', KEYS[3], id); end return redis.call('zremrangebyscore', KEYS[2], '-inf', ARGV[1]);");
+      "local republishTable = redis.call('zrangebyscore', KEYS[2], '-inf', ARGV[1]); if next(republishTable) == nil then return 0; end for i, id in pairs(republishTable) do redis.call('zadd', KEYS[1], 'NX', ARGV[2], id); redis.call('lpush', KEYS[3], id); end return redis.call('zremrangebyscore', KEYS[2], '-inf', ARGV[1]);"),
+
+  // SCAN_SET_PAYLOADS
+  // KEYS: zKey payloadsHashKey
+  // ARGS: cursor count
+  //
+  // local zscanResult = redis.call('zscan', KEYS[1], ARGV[1], 'COUNT', ARGV[2]);
+  // local idScores = zscanResult[2];
+  // local i = 1;
+  // while true do
+  // __ local id = idScores[i];
+  // __ if id == nil then return {zscanResult[1], idScores}; end
+  // __ idScores[i+1] = redis.call('hget', KEYS[2], id);
+  // __ i = i + 2;
+  // end
+  SCAN_ZSET_PAYLOADS(
+      "local zscanResult = redis.call('zscan', KEYS[1], ARGV[1], 'COUNT', ARGV[2]); local idScores = zscanResult[2]; local i = 1; local j = 1; local idScoresPaylods = {}; while true do local id = idScores[i]; if id == nil then return {zscanResult[1], idScoresPaylods}; end idScoresPaylods[j] = {id, idScores[i+1], redis.call('hget', KEYS[2], id)}; i = i + 2; j = j + 1; end");
 
   private transient final String luaScript;
   private transient final String sha1;

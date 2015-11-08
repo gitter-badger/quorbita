@@ -10,6 +10,7 @@ import redis.clients.jedis.Response;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class LuaQ implements QuorbitaQ {
 
@@ -204,5 +205,25 @@ public class LuaQ implements QuorbitaQ {
   @Override
   public int hashCode() {
     return Objects.hashCode(qName);
+  }
+
+  @Override
+  public void scanClaimedPayloads(final Consumer<List<List<byte[]>>> idScorePayloadsConsumer) {
+
+    LuaQFunctions.scanZSetPayloads(jedisExecutor, claimedQKey, payloadsHashKey,
+        idScorePayloadsConsumer);
+  }
+
+  @Override
+  public void scanPublishedPayloads(final Consumer<List<List<byte[]>>> idScorePayloadsConsumer) {
+
+    LuaQFunctions.scanZSetPayloads(jedisExecutor, publishedQKey, payloadsHashKey,
+        idScorePayloadsConsumer);
+  }
+
+  @Override
+  public void scanDeadPayloads(final Consumer<List<List<byte[]>>> idScorePayloadsConsumer) {
+
+    LuaQFunctions.scanZSetPayloads(jedisExecutor, dlqKey, payloadsHashKey, idScorePayloadsConsumer);
   }
 }
