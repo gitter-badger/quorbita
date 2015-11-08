@@ -120,11 +120,14 @@ public enum LuaQScripts {
   // local zscanResult = redis.call('zscan', KEYS[1], ARGV[1], 'COUNT', ARGV[2]);
   // local idScores = zscanResult[2];
   // local i = 1;
+  // local j = 1;
+  // local idScoresPaylods = {};
   // while true do
   // __ local id = idScores[i];
-  // __ if id == nil then return {zscanResult[1], idScores}; end
-  // __ idScores[i+1] = redis.call('hget', KEYS[2], id);
+  // __ if id == nil then return {zscanResult[1], idScoresPaylods}; end
+  // __ idScoresPaylods[j] = {id, idScores[i+1], redis.call('hget', KEYS[2], id)};
   // __ i = i + 2;
+  // __ j = j + 1;
   // end
   SCAN_ZSET_PAYLOADS(
       "local zscanResult = redis.call('zscan', KEYS[1], ARGV[1], 'COUNT', ARGV[2]); local idScores = zscanResult[2]; local i = 1; local j = 1; local idScoresPaylods = {}; while true do local id = idScores[i]; if id == nil then return {zscanResult[1], idScoresPaylods}; end idScoresPaylods[j] = {id, idScores[i+1], redis.call('hget', KEYS[2], id)}; i = i + 2; j = j + 1; end");
@@ -165,14 +168,7 @@ public enum LuaQScripts {
 
       for (int i = 0; i < existResults.size(); i++) {
         if (existResults.get(i) == 0) {
-          try {
-            jedis.scriptLoad(scripts[i].getLuaScript());
-          } catch (final Exception e) {
-            System.out.print(scripts[i].getLuaScript());
-            System.out.print(scripts[i].name());
-            System.out.print(scripts[i]);
-            throw e;
-          }
+          jedis.scriptLoad(scripts[i].getLuaScript());
         }
       }
     });
