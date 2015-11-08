@@ -82,6 +82,17 @@ public enum LuaQScripts {
   REPUBLISH(
       "if ARGV[3] then redis.call('hset', KEYS[3], ARGV[2], ARGV[3]); end redis.call('zadd', KEYS[1], 'NX', ARGV[1], ARGV[2]); redis.call('zrem', KEYS[2], ARGV[2]); redis.call('lpush', KEYS[4], ARGV[2]); return true;"),
 
+  // Always returns 1
+  // KEYS: dlqKey claimedIdsKey payloadsHashKey
+  // ARGS: score id payload
+  //
+  // if ARGV[3] then redis.call('hset', KEYS[3], ARGV[2], ARGV[3]); end
+  // redis.call('zadd', KEYS[1], 'NX', ARGV[1], ARGV[2]);
+  // redis.call('zrem', KEYS[2], ARGV[2]);
+  // return true;
+  KILL(
+      "if ARGV[3] then redis.call('hset', KEYS[3], ARGV[2], ARGV[3]); end redis.call('zadd', KEYS[1], 'NX', ARGV[1], ARGV[2]); redis.call('zrem', KEYS[2], ARGV[2]); return true;"),
+
   // REPUBLISH_BEFORE
   // KEYS: idsKey claimedIdsKey notifyList
   // ARGS: republishMaxScore score

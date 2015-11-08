@@ -7,9 +7,9 @@ final JedisExecutor jedisExecutor = ...;
 LuaQScripts.loadMissingScripts(jedisExecutor);
 
 final String qName = "QUORBITA";
-final LuaQ quorbitaLuaQ = new LuaQ(jedisExecutor, qName);
+final QuorbitaQ quorbitaLuaQ = new LuaQ(jedisExecutor, qName);
 
-quorbitaLuaQ.clear(0);
+quorbitaLuaQ.clear();
 
 quorbitaLuaQ.publish("ID-1", "PAYLOAD-1".getBytes(StandardCharsets.UTF_8));
 
@@ -37,7 +37,7 @@ final String payload = idPayload.get(1);
 System.out.println(String
     .format("Claimed message with id '%s' and payload '%s'", id, payload));
 
-quorbitaLuaQ.removeClaimed(1, id);
+quorbitaLuaQ.removeClaimed(id);
 ```
 
 ###Dependency Management

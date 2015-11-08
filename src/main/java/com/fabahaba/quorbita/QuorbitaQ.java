@@ -70,14 +70,36 @@ public interface QuorbitaQ {
 
   public Long republishClaimedBefore(final byte[] before, final int numRetries);
 
-  default List<byte[]> claim() {
+  default Long kill(final String id) {
 
-    return claim(0);
+    return kill(id, getDefaultNumRetries());
   }
+
+  public Long kill(final String id, final int numRetries);
+
+  default Long killAs(final String id, final byte[] payload) {
+
+    return killAs(id, payload, getDefaultNumRetries());
+  }
+
+  public Long killAs(final String id, final byte[] payload, final int numRetries);
+
+  public List<byte[]> claim();
 
   public List<byte[]> claim(final int timeoutSeconds);
 
+  default long removeClaimed(final String... ids) {
+
+    return removeClaimed(getDefaultNumRetries(), ids);
+  }
+
   public long removeClaimed(final int numRetries, final String... ids);
+
+
+  default long remove(final String... ids) {
+
+    return remove(getDefaultNumRetries(), ids);
+  }
 
   public long remove(final int numRetries, final String... ids);
 
@@ -87,4 +109,12 @@ public interface QuorbitaQ {
   }
 
   public void clear(final int numRetries);
+
+  public Long getPublishedQSize();
+
+  public Long getClaimedQSize();
+
+  public Long getQSize();
+
+  public Long getDLQSize();
 }

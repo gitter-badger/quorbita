@@ -60,6 +60,23 @@ public final class LuaQFunctions {
         LuaQFunctions.getEpochMillisBytes(), id), numRetries);
   }
 
+  public static Long killAs(final JedisExecutor jedisExecutor, final byte[] id,
+      final byte[] payload, final byte[] dlqKey, final byte[] claimedQKey,
+      final byte[] payloadsHashKey, final int numRetries) {
+
+    return (Long) jedisExecutor.applyJedis(jedis -> jedis.evalsha(LuaQScripts.KILL.getSha1Bytes()
+        .array(), 3, dlqKey, claimedQKey, payloadsHashKey, LuaQFunctions.getEpochMillisBytes(), id,
+        payload), numRetries);
+  }
+
+  public static Long kill(final JedisExecutor jedisExecutor, final byte[] id, final byte[] dlqKey,
+      final byte[] claimedQKey, final byte[] payloadsHashKey, final int numRetries) {
+
+    return (Long) jedisExecutor.applyJedis(
+        jedis -> jedis.evalsha(LuaQScripts.KILL.getSha1Bytes().array(), 3, dlqKey, claimedQKey,
+            payloadsHashKey, LuaQFunctions.getEpochMillisBytes(), id), numRetries);
+  }
+
   public static Long republishClaimedBefore(final JedisExecutor jedisExecutor,
       final byte[] publishedQKey, final byte[] claimedQKey, final byte[] notifyListKey,
       final byte[] before, final int numRetries) {
@@ -166,16 +183,10 @@ public final class LuaQFunctions {
     return removedResponses.stream().mapToLong(Response::get).sum();
   }
 
-  public static void clear(final JedisExecutor jedisExecutor, final byte[] publishedQKey,
-      final byte[] claimedQKey, final byte[] payloadsHashKey, final byte[] notifyListKey,
-      final int numRetries) {
+  public static Long clear(final JedisExecutor jedisExecutor, final int numRetries,
+      final byte[]... keys) {
 
-    jedisExecutor.acceptPipelinedTransaction(pipeline -> {
-      pipeline.del(publishedQKey);
-      pipeline.del(claimedQKey);
-      pipeline.del(payloadsHashKey);
-      pipeline.del(notifyListKey);
-    }, numRetries);
+    return jedisExecutor.applyJedis(jedis -> jedis.del(keys), numRetries);
   }
 
   public static List<byte[]> removeOrphanedPayloads(final JedisExecutor jedisExecutor,

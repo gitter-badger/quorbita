@@ -5,6 +5,8 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
+import redis.clients.jedis.Response;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
@@ -17,6 +19,7 @@ public class LuaQ implements QuorbitaQ {
   public static final String CLAIMED_POSTFIX = ":CLAIMED";
   public static final String PAYLOADS_POSTFIX = ":PAYLOADS";
   public static final String NOTIFY_POSTFIX = ":NOTIFY";
+  public static final String DLQ_POSTFIX = ":DEAD";
 
   private final JedisExecutor jedisExecutor;
 
@@ -25,6 +28,7 @@ public class LuaQ implements QuorbitaQ {
   private final byte[] claimedQKey;
   private final byte[] payloadsHashKey;
   private final byte[] notifyListKey;
+  private final byte[] dlqKey;
   private final List<byte[]> keys;
 
   public LuaQ(final JedisExecutor jedisExecutor, final String qName) {
@@ -35,6 +39,7 @@ public class LuaQ implements QuorbitaQ {
     this.claimedQKey = (qName + CLAIMED_POSTFIX).getBytes(StandardCharsets.UTF_8);
     this.payloadsHashKey = (qName + PAYLOADS_POSTFIX).getBytes(StandardCharsets.UTF_8);
     this.notifyListKey = (qName + NOTIFY_POSTFIX).getBytes(StandardCharsets.UTF_8);
+    this.dlqKey = (qName + DLQ_POSTFIX).getBytes(StandardCharsets.UTF_8);
     this.keys = ImmutableList.of(publishedQKey, claimedQKey, payloadsHashKey, notifyListKey);
   }
 
@@ -70,10 +75,31 @@ public class LuaQ implements QuorbitaQ {
   }
 
   @Override
+  public Long kill(final String id, final int numRetries) {
+
+    return LuaQFunctions.kill(jedisExecutor, id.getBytes(StandardCharsets.UTF_8), dlqKey,
+        claimedQKey, payloadsHashKey, numRetries);
+  }
+
+  @Override
+  public Long killAs(final String id, final byte[] payload, final int numRetries) {
+
+    return LuaQFunctions.killAs(jedisExecutor, id.getBytes(StandardCharsets.UTF_8), payload,
+        dlqKey, claimedQKey, payloadsHashKey, numRetries);
+  }
+
+  @Override
   public Long republishClaimedBefore(final byte[] before, final int numRetries) {
 
     return LuaQFunctions.republishClaimedBefore(jedisExecutor, publishedQKey, claimedQKey,
         notifyListKey, before, numRetries);
+  }
+
+  @Override
+  public List<byte[]> claim() {
+
+    return LuaQFunctions.nonBlockingClaim(jedisExecutor, publishedQKey, claimedQKey,
+        payloadsHashKey, notifyListKey);
   }
 
   @Override
@@ -104,8 +130,8 @@ public class LuaQ implements QuorbitaQ {
   @Override
   public void clear(final int numRetries) {
 
-    LuaQFunctions.clear(jedisExecutor, publishedQKey, claimedQKey, payloadsHashKey, notifyListKey,
-        numRetries);
+    LuaQFunctions.clear(jedisExecutor, numRetries, publishedQKey, claimedQKey, payloadsHashKey,
+        notifyListKey, dlqKey);
   }
 
   public List<byte[]> removeOrphanedPayloads() {
@@ -117,6 +143,34 @@ public class LuaQ implements QuorbitaQ {
 
     return LuaQFunctions.removeOrphanedPayloads(jedisExecutor, publishedQKey, claimedQKey,
         payloadsHashKey, batchSize);
+  }
+
+  @Override
+  public Long getPublishedQSize() {
+
+    return jedisExecutor.applyJedis(jedis -> jedis.zcard(publishedQKey), getDefaultNumRetries());
+  }
+
+  @Override
+  public Long getClaimedQSize() {
+
+    return jedisExecutor.applyJedis(jedis -> jedis.zcard(claimedQKey), getDefaultNumRetries());
+  }
+
+  @Override
+  public Long getQSize() {
+
+    return jedisExecutor
+        .applyPipeline(
+            pipeline -> ImmutableList
+                .of(pipeline.zcard(publishedQKey), pipeline.zcard(claimedQKey)),
+            getDefaultNumRetries()).stream().mapToLong(Response::get).sum();
+  }
+
+  @Override
+  public Long getDLQSize() {
+
+    return jedisExecutor.applyJedis(jedis -> jedis.zcard(dlqKey), getDefaultNumRetries());
   }
 
   @Override
