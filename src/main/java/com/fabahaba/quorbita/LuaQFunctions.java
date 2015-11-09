@@ -3,7 +3,6 @@ package com.fabahaba.quorbita;
 import com.fabahaba.jedipus.JedisExecutor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Response;
@@ -12,7 +11,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -89,72 +87,72 @@ public final class LuaQFunctions {
         LuaQFunctions.getEpochMillisBytes()), numRetries);
   }
 
-  public static List<byte[]> claim(final JedisExecutor jedisExecutor, final byte[] publishedQKey,
-      final byte[] claimedQKey, final byte[] payloadsHashKey, final byte[] notifyListKey,
-      final int timeoutSeconds) {
+  public static List<List<byte[]>> claim(final JedisExecutor jedisExecutor,
+      final byte[] publishedQKey, final byte[] claimedQKey, final byte[] payloadsHashKey,
+      final byte[] notifyListKey, final byte[] claimLimit, final int timeoutSeconds) {
 
-    final List<byte[]> nonBlockingGet =
+    final List<List<byte[]>> nonBlockingGet =
         LuaQFunctions.nonBlockingClaim(jedisExecutor, publishedQKey, claimedQKey, payloadsHashKey,
-            notifyListKey);
+            notifyListKey, claimLimit);
 
     if (nonBlockingGet.get(0) != null)
       return nonBlockingGet;
 
     return LuaQFunctions.blockingClaim(jedisExecutor, publishedQKey, claimedQKey, payloadsHashKey,
-        notifyListKey, timeoutSeconds);
+        notifyListKey, claimLimit, timeoutSeconds);
   }
 
-  private static final List<byte[]> EMPTY_Q_SENTINEL = Collections.unmodifiableList(Lists
-      .newArrayList(null, null));
-
-  public static List<byte[]> blockingClaim(final JedisExecutor jedisExecutor,
+  public static List<List<byte[]>> blockingClaim(final JedisExecutor jedisExecutor,
       final byte[] publishedQKey, final byte[] claimedQKey, final byte[] payloadsHashKey,
-      final byte[] notifyListKey, final int timeoutSeconds) {
+      final byte[] notifyListKey, final byte[] claimLimit, final int timeoutSeconds) {
 
     return jedisExecutor.applyJedis(jedis -> {
 
       final List<byte[]> event = jedis.blpop(timeoutSeconds, notifyListKey);
 
-      return event == null ? EMPTY_Q_SENTINEL : LuaQFunctions.claim(jedis, publishedQKey,
-          claimedQKey, payloadsHashKey, notifyListKey);
+      return event == null ? ImmutableList.of() : LuaQFunctions.claim(jedis, publishedQKey,
+          claimedQKey, payloadsHashKey, notifyListKey, claimLimit);
     });
   }
 
-  public static List<byte[]> nonBlockingClaim(final JedisExecutor jedisExecutor,
+  public static List<List<byte[]>> nonBlockingClaim(final JedisExecutor jedisExecutor,
       final byte[] publishedQKey, final byte[] claimedQKey, final byte[] payloadsHashKey,
-      final byte[] notifyListKey) {
+      final byte[] notifyListKey, final byte[] claimLimit) {
 
     return jedisExecutor.applyJedis(jedis -> LuaQFunctions.claim(jedis, publishedQKey, claimedQKey,
-        payloadsHashKey, notifyListKey));
+        payloadsHashKey, notifyListKey, claimLimit));
   }
 
   @SuppressWarnings("unchecked")
-  private static List<byte[]> claim(final Jedis jedis, final byte[] publishedQKey,
-      final byte[] claimedQKey, final byte[] payloadsHashKey, final byte[] notifyListKey) {
+  private static List<List<byte[]>> claim(final Jedis jedis, final byte[] publishedQKey,
+      final byte[] claimedQKey, final byte[] payloadsHashKey, final byte[] notifyListKey,
+      final byte[] claimLimit) {
 
-    return (List<byte[]>) jedis.evalsha(LuaQScripts.CLAIM.getSha1Bytes().array(), 4, publishedQKey,
-        claimedQKey, payloadsHashKey, notifyListKey, LuaQFunctions.getEpochMillisBytes());
+    return (List<List<byte[]>>) jedis.evalsha(LuaQScripts.MCLAIM.getSha1Bytes().array(), 4,
+        publishedQKey, claimedQKey, payloadsHashKey, notifyListKey,
+        LuaQFunctions.getEpochMillisBytes(), claimLimit);
   }
 
   public static void consume(final JedisExecutor jedisExecutor, final byte[] publishedQKey,
       final byte[] claimedQKey, final byte[] payloadsHashKey, final byte[] notifyListKey,
-      final Function<List<byte[]>, Boolean> idPayloadConsumer, final int maxBlockOnEmptyQSeconds) {
+      final Function<List<List<byte[]>>, Boolean> idPayloadConsumer, final byte[] claimLimit,
+      final int maxBlockOnEmptyQSeconds) {
 
     jedisExecutor.acceptJedis(jedis -> {
 
       for (;;) {
         @SuppressWarnings("unchecked")
-        final List<byte[]> idPayload =
-            (List<byte[]>) jedis.evalsha(LuaQScripts.CLAIM.getSha1Bytes().array(), 4,
+        final List<List<byte[]>> idPayloads =
+            (List<List<byte[]>>) jedis.evalsha(LuaQScripts.MCLAIM.getSha1Bytes().array(), 4,
                 publishedQKey, claimedQKey, payloadsHashKey, notifyListKey,
-                LuaQFunctions.getEpochMillisBytes());
+                LuaQFunctions.getEpochMillisBytes(), claimLimit);
 
-        if (idPayload.get(0) == null) {
+        if (idPayloads.isEmpty()) {
           jedis.blpop(maxBlockOnEmptyQSeconds, notifyListKey);
           continue;
         }
 
-        if (!idPayloadConsumer.apply(idPayload))
+        if (!idPayloadConsumer.apply(idPayloads))
           return;
       }
     });
@@ -162,18 +160,18 @@ public final class LuaQFunctions {
 
   public static void consume(final JedisExecutor jedisExecutor, final byte[] publishedQKey,
       final byte[] claimedQKey, final byte[] payloadsHashKey, final byte[] notifyListKey,
-      final Function<List<byte[]>, Boolean> idPayloadConsumer) {
+      final Function<List<List<byte[]>>, Boolean> idPayloadConsumer, final byte[] claimLimit) {
 
     jedisExecutor.acceptJedis(jedis -> {
 
       for (;;) {
         @SuppressWarnings("unchecked")
-        final List<byte[]> idPayload =
-            (List<byte[]>) jedis.evalsha(LuaQScripts.CLAIM.getSha1Bytes().array(), 4,
+        final List<List<byte[]>> idPayloads =
+            (List<List<byte[]>>) jedis.evalsha(LuaQScripts.MCLAIM.getSha1Bytes().array(), 4,
                 publishedQKey, claimedQKey, payloadsHashKey, notifyListKey,
-                LuaQFunctions.getEpochMillisBytes());
+                LuaQFunctions.getEpochMillisBytes(), claimLimit);
 
-        if (!idPayloadConsumer.apply(idPayload))
+        if (!idPayloadConsumer.apply(idPayloads))
           return;
       }
     });

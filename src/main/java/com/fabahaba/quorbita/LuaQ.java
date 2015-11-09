@@ -113,32 +113,33 @@ public class LuaQ implements QuorbitaQ {
   }
 
   @Override
-  public List<byte[]> claim() {
+  public List<List<byte[]>> claim(final byte[] claimLimit) {
 
     return LuaQFunctions.nonBlockingClaim(jedisExecutor, publishedQKey, claimedQKey,
-        payloadsHashKey, notifyListKey);
+        payloadsHashKey, notifyListKey, claimLimit);
   }
 
   @Override
-  public List<byte[]> claim(final int timeoutSeconds) {
+  public List<List<byte[]>> claim(final byte[] claimLimit, final int timeoutSeconds) {
 
     return LuaQFunctions.claim(jedisExecutor, publishedQKey, claimedQKey, payloadsHashKey,
-        notifyListKey, timeoutSeconds);
+        notifyListKey, claimLimit, timeoutSeconds);
   }
 
   @Override
-  public void consume(final Function<List<byte[]>, Boolean> idPayloadConsumer,
-      final int maxBlockOnEmptyQSeconds) {
+  public void consume(final Function<List<List<byte[]>>, Boolean> idPayloadConsumer,
+      final byte[] claimLimit, final int maxBlockOnEmptyQSeconds) {
 
     LuaQFunctions.consume(jedisExecutor, publishedQKey, claimedQKey, payloadsHashKey,
-        notifyListKey, idPayloadConsumer, maxBlockOnEmptyQSeconds);
+        notifyListKey, idPayloadConsumer, claimLimit, maxBlockOnEmptyQSeconds);
   }
 
   @Override
-  public void consume(final Function<List<byte[]>, Boolean> idPayloadConsumer) {
+  public void consume(final Function<List<List<byte[]>>, Boolean> idPayloadConsumer,
+      final byte[] claimLimit) {
 
     LuaQFunctions.consume(jedisExecutor, publishedQKey, claimedQKey, payloadsHashKey,
-        notifyListKey, idPayloadConsumer);
+        notifyListKey, idPayloadConsumer, claimLimit);
   }
 
   @Override

@@ -10,6 +10,7 @@ import com.google.common.util.concurrent.Futures;
 import redis.clients.jedis.Jedis;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -48,17 +49,22 @@ public class ThroughputBenchmark {
     this.luaQ = new LuaQ(pooledJedisExecutor, ThroughputBenchmark.class.getSimpleName());
   }
 
-  private static class Consumer implements Callable<long[]> {
+  static class Consumer implements Callable<long[]> {
 
     private final LuaQ luaQ;
     private final CountDownLatch latch;
     private final AtomicBoolean donePublishing;
+    private final byte[] claimLimit;
+    private final boolean batchRemove;
 
-    public Consumer(final LuaQ luaQ, final CountDownLatch latch, final AtomicBoolean donePublishing) {
+    public Consumer(final LuaQ luaQ, final CountDownLatch latch,
+        final AtomicBoolean donePublishing, final int consumeBatchSize, final boolean batchRemove) {
 
       this.luaQ = luaQ;
       this.latch = latch;
       this.donePublishing = donePublishing;
+      this.claimLimit = String.valueOf(consumeBatchSize).getBytes(StandardCharsets.UTF_8);
+      this.batchRemove = batchRemove;
     }
 
     @Override
@@ -73,34 +79,45 @@ public class ThroughputBenchmark {
       }
 
       startStop[0] = System.nanoTime();
-      luaQ.consume(ipPayload -> {
-        final byte[] id = ipPayload.get(0);
 
-        if (id == null) {
-          if (donePublishing.get()) {
-            startStop[1] = System.nanoTime();
-            if (luaQ.getPublishedQSize() == 0)
-              return Boolean.FALSE;
-          }
-          return Boolean.TRUE;
-        }
+      luaQ.consume(
+          ipPayloads -> {
 
-        luaQ.removeClaimed(id);
-        return Boolean.TRUE;
-      });
+            if (ipPayloads.isEmpty()) {
+              if (donePublishing.get()) {
+                startStop[1] = System.nanoTime();
+                if (luaQ.getPublishedQSize() == 0)
+                  return Boolean.FALSE;
+              }
+              return Boolean.TRUE;
+            }
+
+            if (batchRemove) {
+              luaQ.removeClaimed(ipPayloads.stream().map(ipPayload -> ipPayload.get(0))
+                  .toArray(byte[][]::new));
+            } else {
+              for (final List<byte[]> ipPayload : ipPayloads) {
+                luaQ.removeClaimed(ipPayload.get(0));
+              }
+            }
+
+
+            return Boolean.TRUE;
+          }, claimLimit);
       return startStop;
     }
   }
 
   public void run(final int numJobs, final int payloadSizeBytes, final int publishBatchSize,
-      final boolean concurrentPubSub) {
+      final boolean concurrentPubSub, final int consumeBatchSize, final boolean batchRemove) {
 
-    run(numJobs, payloadSizeBytes, publishBatchSize, concurrentPubSub, Runtime.getRuntime()
-        .availableProcessors());
+    run(numJobs, payloadSizeBytes, publishBatchSize, concurrentPubSub, consumeBatchSize,
+        batchRemove, Runtime.getRuntime().availableProcessors());
   }
 
   public void run(final int numJobs, final int payloadSizeBytes, final int publishBatchSize,
-      final boolean concurrentPubSub, final int numConsumers) {
+      final boolean concurrentPubSub, final int consumeBatchSize, final boolean batchRemove,
+      final int numConsumers) {
 
     luaQ.clear();
 
@@ -112,8 +129,8 @@ public class ThroughputBenchmark {
     for (int i = 0; i < numConsumers; i++) {
 
       if (jedisPublisherAndPrototype == null) {
-        consumerFutures
-            .add(consumerExecutor.submit(new Consumer(luaQ, startLatch, donePublishing)));
+        consumerFutures.add(consumerExecutor.submit(new Consumer(luaQ, startLatch, donePublishing,
+            consumeBatchSize, batchRemove)));
         continue;
       }
 
@@ -123,7 +140,7 @@ public class ThroughputBenchmark {
               ThroughputBenchmark.class.getSimpleName());
 
       consumerFutures.add(consumerExecutor.submit(new Consumer(directConsumerQ, startLatch,
-          donePublishing)));
+          donePublishing, consumeBatchSize, batchRemove)));
     }
 
     final byte[] payload = new byte[payloadSizeBytes];
@@ -134,21 +151,25 @@ public class ThroughputBenchmark {
     }
 
     final long publishStart = System.nanoTime();
+
     if (publishBatchSize == 0) {
       for (long i = 0; i < numJobs; i++) {
         luaQ.publish(ByteBuffer.allocate(8).putLong(i).array(), payload);
       }
     } else {
-      for (long i = 0; i < numJobs; i += publishBatchSize) {
+      for (long from = 0; from < numJobs;) {
 
+        final long toExclusive = Math.min(from + publishBatchSize, numJobs);
         final List<byte[]> idPayloads =
             LongStream
-                .range(i, i + publishBatchSize)
+                .range(from, toExclusive)
                 .mapToObj(
                     id -> new byte[][] { ByteBuffer.allocate(8).putLong(id).array(), payload })
                 .flatMap(Arrays::stream).collect(Collectors.toList());
 
         luaQ.publish(idPayloads);
+
+        from = toExclusive;
       }
     }
 
@@ -202,14 +223,17 @@ public class ThroughputBenchmark {
 
   public static void main(final String[] args) {
 
-    final int numMessages = 100000;
-    final int payloadSize = 1024;
-    final int publishBatchSize = 100;
-    final int numConsumers = 2;
-    final boolean concurrentPubSub = true;
-
     final ThroughputBenchmark benchmark = new ThroughputBenchmark(new Jedis("localhost"));
 
-    benchmark.run(numMessages, payloadSize, publishBatchSize, concurrentPubSub, numConsumers);
+    final int numJobs = 100000;
+    final int payloadSize = 1024;
+    final int publishBatchSize = 100;
+    final int consumeBatchSize = 100;
+    final boolean batchRemove = true;
+    final int numConsumers = 2;
+    final boolean concurrentPubSub = false;
+
+    benchmark.run(numJobs, payloadSize, publishBatchSize, concurrentPubSub, consumeBatchSize,
+        batchRemove, numConsumers);
   }
 }

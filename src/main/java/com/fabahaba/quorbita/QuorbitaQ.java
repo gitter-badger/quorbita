@@ -104,14 +104,15 @@ public interface QuorbitaQ {
 
   public Long killAs(final String id, final byte[] payload, final int numRetries);
 
-  public List<byte[]> claim();
+  public List<List<byte[]>> claim(final byte[] claimLimit);
 
-  public List<byte[]> claim(final int timeoutSeconds);
+  public List<List<byte[]>> claim(final byte[] claimLimit, final int timeoutSeconds);
 
-  public void consume(final Function<List<byte[]>, Boolean> idPayloadConsumer,
-      final int maxBlockOnEmptyQSeconds);
+  public void consume(final Function<List<List<byte[]>>, Boolean> idPayloadConsumer,
+      final byte[] claimLimit, final int maxBlockOnEmptyQSeconds);
 
-  public void consume(final Function<List<byte[]>, Boolean> idPayloadConsumer);
+  public void consume(final Function<List<List<byte[]>>, Boolean> idPayloadConsumer,
+      final byte[] claimLimit);
 
   default Long checkin(final String id) {
 
