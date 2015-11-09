@@ -27,6 +27,13 @@ public interface QuorbitaQ {
 
   public Long publish(final String id, final byte[] payload, final int numRetries);
 
+  default Long publish(final byte[] id, final byte[] payload) {
+
+    return publish(id, payload, getDefaultNumRetries());
+  }
+
+  public Long publish(final byte[] id, final byte[] payload, final int numRetries);
+
   default Long publish(final Collection<byte[]> idPayloads) {
 
     return publish(idPayloads, getDefaultNumRetries());
@@ -114,6 +121,13 @@ public interface QuorbitaQ {
 
   public long removeClaimed(final int numRetries, final String... ids);
 
+  default long removeClaimed(final byte[]... ids) {
+
+    return removeClaimed(getDefaultNumRetries(), ids);
+  }
+
+  public long removeClaimed(final int numRetries, final byte[]... ids);
+
   default long removeDead(final String... ids) {
 
     return removeDead(getDefaultNumRetries(), ids);
@@ -121,12 +135,26 @@ public interface QuorbitaQ {
 
   public long removeDead(final int numRetries, final String... ids);
 
+  default long removeDead(final byte[]... ids) {
+
+    return removeDead(getDefaultNumRetries(), ids);
+  }
+
+  public long removeDead(final int numRetries, final byte[]... ids);
+
   default long remove(final String... ids) {
 
     return remove(getDefaultNumRetries(), ids);
   }
 
   public long remove(final int numRetries, final String... ids);
+
+  default long remove(final byte[]... ids) {
+
+    return remove(getDefaultNumRetries(), ids);
+  }
+
+  public long remove(final int numRetries, final byte[]... ids);
 
   default void clear() {
 

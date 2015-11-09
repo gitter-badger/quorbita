@@ -171,6 +171,23 @@ public final class LuaQFunctions {
     return removedResponses.stream().mapToLong(Response::get).sum();
   }
 
+  public static long remove(final JedisExecutor jedisExecutor, final byte[] qKey,
+      final byte[] payloadsHashKey, final int numRetries, final byte[]... ids) {
+
+    final List<Response<Long>> removedResponses = new ArrayList<>(ids.length);
+
+    jedisExecutor.acceptPipelinedTransaction(pipeline -> {
+
+      for (final byte[] idBytes : ids) {
+
+        removedResponses.add(pipeline.zrem(qKey, idBytes));
+        pipeline.hdel(payloadsHashKey, idBytes);
+      }
+    }, numRetries);
+
+    return removedResponses.stream().mapToLong(Response::get).sum();
+  }
+
   public static long remove(final JedisExecutor jedisExecutor, final byte[] publishedQKey,
       final byte[] claimedQKey, final byte[] payloadsHashKey, final int numRetries,
       final String... ids) {
@@ -182,6 +199,25 @@ public final class LuaQFunctions {
       for (final String id : ids) {
 
         final byte[] idBytes = id.getBytes(StandardCharsets.UTF_8);
+
+        removedResponses.add(pipeline.zrem(publishedQKey, idBytes));
+        removedResponses.add(pipeline.zrem(claimedQKey, idBytes));
+        pipeline.hdel(payloadsHashKey, idBytes);
+      }
+    }, numRetries);
+
+    return removedResponses.stream().mapToLong(Response::get).sum();
+  }
+
+  public static long remove(final JedisExecutor jedisExecutor, final byte[] publishedQKey,
+      final byte[] claimedQKey, final byte[] payloadsHashKey, final int numRetries,
+      final byte[]... ids) {
+
+    final List<Response<Long>> removedResponses = new ArrayList<>(ids.length);
+
+    jedisExecutor.acceptPipelinedTransaction(pipeline -> {
+
+      for (final byte[] idBytes : ids) {
 
         removedResponses.add(pipeline.zrem(publishedQKey, idBytes));
         removedResponses.add(pipeline.zrem(claimedQKey, idBytes));

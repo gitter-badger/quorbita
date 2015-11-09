@@ -53,8 +53,14 @@ public class LuaQ implements QuorbitaQ {
   @Override
   public Long publish(final String id, final byte[] payload, final int numRetries) {
 
-    return LuaQFunctions.publish(jedisExecutor, id.getBytes(StandardCharsets.UTF_8), payload,
-        publishedQKey, claimedQKey, payloadsHashKey, notifyListKey, numRetries);
+    return publish(id.getBytes(StandardCharsets.UTF_8), payload, numRetries);
+  }
+
+  @Override
+  public Long publish(final byte[] id, final byte[] payload, final int numRetries) {
+
+    return LuaQFunctions.publish(jedisExecutor, id, payload, publishedQKey, claimedQKey,
+        payloadsHashKey, notifyListKey, numRetries);
   }
 
   @Override
@@ -137,13 +143,32 @@ public class LuaQ implements QuorbitaQ {
   }
 
   @Override
+  public long removeClaimed(final int numRetries, final byte[]... ids) {
+
+    return LuaQFunctions.remove(jedisExecutor, claimedQKey, payloadsHashKey, numRetries, ids);
+  }
+
+  @Override
   public long removeDead(final int numRetries, final String... ids) {
 
     return LuaQFunctions.remove(jedisExecutor, dlqKey, payloadsHashKey, numRetries, ids);
   }
 
   @Override
+  public long removeDead(final int numRetries, final byte[]... ids) {
+
+    return LuaQFunctions.remove(jedisExecutor, dlqKey, payloadsHashKey, numRetries, ids);
+  }
+
+  @Override
   public long remove(final int numRetries, final String... ids) {
+
+    return LuaQFunctions.remove(jedisExecutor, publishedQKey, claimedQKey, payloadsHashKey,
+        numRetries, ids);
+  }
+
+  @Override
+  public long remove(final int numRetries, final byte[]... ids) {
 
     return LuaQFunctions.remove(jedisExecutor, publishedQKey, claimedQKey, payloadsHashKey,
         numRetries, ids);
@@ -258,5 +283,4 @@ public class LuaQ implements QuorbitaQ {
   public int hashCode() {
     return Objects.hash(jedisExecutor, qName);
   }
-
 }
