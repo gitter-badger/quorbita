@@ -95,7 +95,7 @@ public final class LuaQFunctions {
         LuaQFunctions.nonBlockingClaim(jedisExecutor, publishedQKey, claimedQKey, payloadsHashKey,
             notifyListKey, claimLimit);
 
-    if (nonBlockingGet.get(0) != null)
+    if (!nonBlockingGet.isEmpty())
       return nonBlockingGet;
 
     return LuaQFunctions.blockingClaim(jedisExecutor, publishedQKey, claimedQKey, payloadsHashKey,
