@@ -17,6 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public final class LuaQFunctions {
 
@@ -112,9 +113,9 @@ public final class LuaQFunctions {
 
     return jedisExecutor.applyJedis(jedis -> {
 
-      final List<byte[]> events = jedis.blpop(timeoutSeconds, notifyListKey);
+      final List<byte[]> event = jedis.blpop(timeoutSeconds, notifyListKey);
 
-      return events == null ? EMPTY_Q_SENTINEL : LuaQFunctions.claim(jedis, publishedQKey,
+      return event == null ? EMPTY_Q_SENTINEL : LuaQFunctions.claim(jedis, publishedQKey,
           claimedQKey, payloadsHashKey, notifyListKey);
     });
   }
@@ -133,6 +134,49 @@ public final class LuaQFunctions {
 
     return (List<byte[]>) jedis.evalsha(LuaQScripts.CLAIM.getSha1Bytes().array(), 4, publishedQKey,
         claimedQKey, payloadsHashKey, notifyListKey, LuaQFunctions.getEpochMillisBytes());
+  }
+
+  public static void consume(final JedisExecutor jedisExecutor, final byte[] publishedQKey,
+      final byte[] claimedQKey, final byte[] payloadsHashKey, final byte[] notifyListKey,
+      final Function<List<byte[]>, Boolean> idPayloadConsumer, final int maxBlockOnEmptyQSeconds) {
+
+    jedisExecutor.acceptJedis(jedis -> {
+
+      for (;;) {
+        @SuppressWarnings("unchecked")
+        final List<byte[]> idPayload =
+            (List<byte[]>) jedis.evalsha(LuaQScripts.CLAIM.getSha1Bytes().array(), 4,
+                publishedQKey, claimedQKey, payloadsHashKey, notifyListKey,
+                LuaQFunctions.getEpochMillisBytes());
+
+        if (idPayload.get(0) == null) {
+          jedis.blpop(maxBlockOnEmptyQSeconds, notifyListKey);
+          continue;
+        }
+
+        if (!idPayloadConsumer.apply(idPayload))
+          return;
+      }
+    });
+  }
+
+  public static void consume(final JedisExecutor jedisExecutor, final byte[] publishedQKey,
+      final byte[] claimedQKey, final byte[] payloadsHashKey, final byte[] notifyListKey,
+      final Function<List<byte[]>, Boolean> idPayloadConsumer) {
+
+    jedisExecutor.acceptJedis(jedis -> {
+
+      for (;;) {
+        @SuppressWarnings("unchecked")
+        final List<byte[]> idPayload =
+            (List<byte[]>) jedis.evalsha(LuaQScripts.CLAIM.getSha1Bytes().array(), 4,
+                publishedQKey, claimedQKey, payloadsHashKey, notifyListKey,
+                LuaQFunctions.getEpochMillisBytes());
+
+        if (!idPayloadConsumer.apply(idPayload))
+          return;
+      }
+    });
   }
 
   public static Long checkin(final JedisExecutor jedisExecutor, final byte[] claimedQKey,

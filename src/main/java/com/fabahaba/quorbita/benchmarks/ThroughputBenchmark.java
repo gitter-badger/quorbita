@@ -20,21 +20,32 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 public class ThroughputBenchmark {
 
-  private final Jedis jedis;
-  private final LuaQ publishQ;
+  private final Jedis jedisPublisherAndPrototype;
+  private final LuaQ luaQ;
 
   public ThroughputBenchmark(final Jedis jedis) {
 
-    this.jedis = jedis;
+    this.jedisPublisherAndPrototype = jedis;
 
     final JedisExecutor jedisExecutor = new DirectJedisExecutor(jedis);
 
     LuaQScripts.loadMissingScripts(jedisExecutor);
 
-    this.publishQ = new LuaQ(jedisExecutor, ThroughputBenchmark.class.getSimpleName());
+    this.luaQ = new LuaQ(jedisExecutor, ThroughputBenchmark.class.getSimpleName());
+  }
+
+  public ThroughputBenchmark(final JedisExecutor pooledJedisExecutor) {
+
+    this.jedisPublisherAndPrototype = null;
+
+    LuaQScripts.loadMissingScripts(pooledJedisExecutor);
+
+    this.luaQ = new LuaQ(pooledJedisExecutor, ThroughputBenchmark.class.getSimpleName());
   }
 
   private static class Consumer implements Callable<long[]> {
@@ -62,46 +73,57 @@ public class ThroughputBenchmark {
       }
 
       startStop[0] = System.nanoTime();
-      for (;;) {
-        final List<byte[]> ipPayload = luaQ.claim();
-
+      luaQ.consume(ipPayload -> {
         final byte[] id = ipPayload.get(0);
 
         if (id == null) {
           if (donePublishing.get()) {
             startStop[1] = System.nanoTime();
-            return startStop;
+            if (luaQ.getPublishedQSize() == 0)
+              return Boolean.FALSE;
           }
-          continue;
+          return Boolean.TRUE;
         }
 
         luaQ.removeClaimed(id);
-      }
+        return Boolean.TRUE;
+      });
+      return startStop;
     }
   }
 
-  public void run(final int numJobs, final int payloadSizeBytes, final boolean concurrentPubSub) {
+  public void run(final int numJobs, final int payloadSizeBytes, final int publishBatchSize,
+      final boolean concurrentPubSub) {
 
-    run(numJobs, payloadSizeBytes, concurrentPubSub, Runtime.getRuntime().availableProcessors());
+    run(numJobs, payloadSizeBytes, publishBatchSize, concurrentPubSub, Runtime.getRuntime()
+        .availableProcessors());
   }
 
-  public void run(final int numJobs, final int payloadSizeBytes, final boolean concurrentPubSub,
-      final int numConsumers) {
+  public void run(final int numJobs, final int payloadSizeBytes, final int publishBatchSize,
+      final boolean concurrentPubSub, final int numConsumers) {
 
-    publishQ.clear();
+    luaQ.clear();
 
-    final ExecutorService workerExecutor = Executors.newFixedThreadPool(numConsumers);
+    final ExecutorService consumerExecutor = Executors.newFixedThreadPool(numConsumers);
     final List<Future<long[]>> consumerFutures = new ArrayList<>(numConsumers);
     final CountDownLatch startLatch = new CountDownLatch(1);
     final AtomicBoolean donePublishing = new AtomicBoolean(false);
 
     for (int i = 0; i < numConsumers; i++) {
 
-      final LuaQ workerQ =
-          new LuaQ(new DirectJedisExecutor(new Jedis(jedis.getClient().getHost(), jedis.getClient()
-              .getPort())), ThroughputBenchmark.class.getSimpleName());
+      if (jedisPublisherAndPrototype == null) {
+        consumerFutures
+            .add(consumerExecutor.submit(new Consumer(luaQ, startLatch, donePublishing)));
+        continue;
+      }
 
-      consumerFutures.add(workerExecutor.submit(new Consumer(workerQ, startLatch, donePublishing)));
+      final LuaQ directConsumerQ =
+          new LuaQ(new DirectJedisExecutor(new Jedis(jedisPublisherAndPrototype.getClient()
+              .getHost(), jedisPublisherAndPrototype.getClient().getPort())),
+              ThroughputBenchmark.class.getSimpleName());
+
+      consumerFutures.add(consumerExecutor.submit(new Consumer(directConsumerQ, startLatch,
+          donePublishing)));
     }
 
     final byte[] payload = new byte[payloadSizeBytes];
@@ -112,13 +134,29 @@ public class ThroughputBenchmark {
     }
 
     final long publishStart = System.nanoTime();
-    for (long i = 0; i < numJobs; i++) {
-      publishQ.publish(ByteBuffer.allocate(8).putLong(i).array(), payload);
+    if (publishBatchSize == 0) {
+      for (long i = 0; i < numJobs; i++) {
+        luaQ.publish(ByteBuffer.allocate(8).putLong(i).array(), payload);
+      }
+    } else {
+      for (long i = 0; i < numJobs; i += publishBatchSize) {
+
+        final List<byte[]> idPayloads =
+            LongStream
+                .range(i, i + publishBatchSize)
+                .mapToObj(
+                    id -> new byte[][] { ByteBuffer.allocate(8).putLong(id).array(), payload })
+                .flatMap(Arrays::stream).collect(Collectors.toList());
+
+        luaQ.publish(idPayloads);
+      }
     }
+
     final long publishDuration = System.nanoTime() - publishStart;
     donePublishing.set(true);
 
     if (!concurrentPubSub) {
+      System.out.println("Finished publishing.");
       startLatch.countDown();
     }
 
@@ -138,7 +176,7 @@ public class ThroughputBenchmark {
       }
     }
 
-    workerExecutor.shutdown();
+    consumerExecutor.shutdown();
 
     final long consumeDuration = maxEnd - minStart;
     final long consumeDurationMillis =
@@ -166,13 +204,12 @@ public class ThroughputBenchmark {
 
     final int numMessages = 100000;
     final int payloadSize = 1024;
+    final int publishBatchSize = 100;
     final int numConsumers = 2;
     final boolean concurrentPubSub = true;
 
     final ThroughputBenchmark benchmark = new ThroughputBenchmark(new Jedis("localhost"));
 
-    benchmark.run(numMessages, payloadSize, concurrentPubSub, numConsumers);
-
-    System.out.println();
+    benchmark.run(numMessages, payloadSize, publishBatchSize, concurrentPubSub, numConsumers);
   }
 }

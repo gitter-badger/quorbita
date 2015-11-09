@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class LuaQ implements QuorbitaQ {
@@ -123,6 +124,21 @@ public class LuaQ implements QuorbitaQ {
 
     return LuaQFunctions.claim(jedisExecutor, publishedQKey, claimedQKey, payloadsHashKey,
         notifyListKey, timeoutSeconds);
+  }
+
+  @Override
+  public void consume(final Function<List<byte[]>, Boolean> idPayloadConsumer,
+      final int maxBlockOnEmptyQSeconds) {
+
+    LuaQFunctions.consume(jedisExecutor, publishedQKey, claimedQKey, payloadsHashKey,
+        notifyListKey, idPayloadConsumer, maxBlockOnEmptyQSeconds);
+  }
+
+  @Override
+  public void consume(final Function<List<byte[]>, Boolean> idPayloadConsumer) {
+
+    LuaQFunctions.consume(jedisExecutor, publishedQKey, claimedQKey, payloadsHashKey,
+        notifyListKey, idPayloadConsumer);
   }
 
   @Override

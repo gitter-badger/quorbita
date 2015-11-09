@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public interface QuorbitaQ {
 
@@ -106,6 +107,11 @@ public interface QuorbitaQ {
   public List<byte[]> claim();
 
   public List<byte[]> claim(final int timeoutSeconds);
+
+  public void consume(final Function<List<byte[]>, Boolean> idPayloadConsumer,
+      final int maxBlockOnEmptyQSeconds);
+
+  public void consume(final Function<List<byte[]>, Boolean> idPayloadConsumer);
 
   default Long checkin(final String id) {
 
