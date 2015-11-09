@@ -48,6 +48,13 @@ public interface QuorbitaQ {
 
   public Long republishAs(final String id, final byte[] payload, final int numRetries);
 
+  default Long republishDeadAs(final String id, final byte[] payload) {
+
+    return republishDeadAs(id, payload, getDefaultNumRetries());
+  }
+
+  public Long republishDeadAs(final String id, final byte[] payload, final int numRetries);
+
   default Long republishClaimedBefore(final long before) {
 
     return republishClaimedBefore(before, getDefaultNumRetries());
@@ -107,6 +114,12 @@ public interface QuorbitaQ {
 
   public long removeClaimed(final int numRetries, final String... ids);
 
+  default long removeDead(final String... ids) {
+
+    return removeDead(getDefaultNumRetries(), ids);
+  }
+
+  public long removeDead(final int numRetries, final String... ids);
 
   default long remove(final String... ids) {
 
@@ -121,6 +134,13 @@ public interface QuorbitaQ {
   }
 
   public void clear(final int numRetries);
+
+  default void clearDLQ() {
+
+    clearDLQ(getDefaultNumRetries());
+  }
+
+  public void clearDLQ(final int numRetries);
 
   public Long getPublishedQSize();
 

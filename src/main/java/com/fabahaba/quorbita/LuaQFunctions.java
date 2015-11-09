@@ -152,7 +152,7 @@ public final class LuaQFunctions {
     return LuaQFunctions.getEpochMillisString().getBytes(StandardCharsets.UTF_8);
   }
 
-  public static long remove(final JedisExecutor jedisExecutor, final byte[] publishedQKey,
+  public static long remove(final JedisExecutor jedisExecutor, final byte[] qKey,
       final byte[] payloadsHashKey, final int numRetries, final String... ids) {
 
     final List<Response<Long>> removedResponses = new ArrayList<>(ids.length);
@@ -163,7 +163,7 @@ public final class LuaQFunctions {
 
         final byte[] idBytes = id.getBytes(StandardCharsets.UTF_8);
 
-        removedResponses.add(pipeline.zrem(publishedQKey, idBytes));
+        removedResponses.add(pipeline.zrem(qKey, idBytes));
         pipeline.hdel(payloadsHashKey, idBytes);
       }
     }, numRetries);
@@ -196,6 +196,16 @@ public final class LuaQFunctions {
       final byte[]... keys) {
 
     return jedisExecutor.applyJedis(jedis -> jedis.del(keys), numRetries);
+  }
+
+  public static Long clearQ(final JedisExecutor jedisExecutor, final byte[] qKey,
+      final byte[] payloadsHashKey, final int numRetries) {
+
+    return jedisExecutor.applyJedis(jedis -> {
+      final Set<byte[]> qMembers = jedis.zrange(qKey, 0, -1);
+      jedis.hdel(payloadsHashKey, qMembers.toArray(new byte[qMembers.size()][]));
+      return jedis.del(qKey);
+    }, numRetries);
   }
 
   public static List<byte[]> removeOrphanedPayloads(final JedisExecutor jedisExecutor,

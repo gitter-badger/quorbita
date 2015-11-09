@@ -77,6 +77,13 @@ public class LuaQ implements QuorbitaQ {
   }
 
   @Override
+  public Long republishDeadAs(final String id, final byte[] payload, final int numRetries) {
+
+    return LuaQFunctions.republishAs(jedisExecutor, id.getBytes(StandardCharsets.UTF_8), payload,
+        publishedQKey, dlqKey, payloadsHashKey, notifyListKey, numRetries);
+  }
+
+  @Override
   public Long kill(final String id, final int numRetries) {
 
     return LuaQFunctions.kill(jedisExecutor, id.getBytes(StandardCharsets.UTF_8), dlqKey,
@@ -129,6 +136,12 @@ public class LuaQ implements QuorbitaQ {
   }
 
   @Override
+  public long removeDead(final int numRetries, final String... ids) {
+
+    return LuaQFunctions.remove(jedisExecutor, dlqKey, payloadsHashKey, numRetries, ids);
+  }
+
+  @Override
   public long remove(final int numRetries, final String... ids) {
 
     return LuaQFunctions.remove(jedisExecutor, publishedQKey, claimedQKey, payloadsHashKey,
@@ -140,6 +153,12 @@ public class LuaQ implements QuorbitaQ {
 
     LuaQFunctions.clear(jedisExecutor, numRetries, publishedQKey, claimedQKey, payloadsHashKey,
         notifyListKey, dlqKey);
+  }
+
+  @Override
+  public void clearDLQ(final int numRetries) {
+
+    LuaQFunctions.clearQ(jedisExecutor, dlqKey, payloadsHashKey, numRetries);
   }
 
   public List<byte[]> removeOrphanedPayloads() {
