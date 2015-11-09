@@ -81,9 +81,9 @@ public class ThroughputBenchmark {
       startStop[0] = System.nanoTime();
 
       luaQ.consume(
-          ipPayloads -> {
+          idPayloads -> {
 
-            if (ipPayloads.isEmpty()) {
+            if (idPayloads.isEmpty()) {
               if (donePublishing.get()) {
                 startStop[1] = System.nanoTime();
                 if (luaQ.getPublishedQSize() == 0)
@@ -93,10 +93,10 @@ public class ThroughputBenchmark {
             }
 
             if (batchRemove) {
-              luaQ.removeClaimed(ipPayloads.stream().map(ipPayload -> ipPayload.get(0))
+              luaQ.removeClaimed(idPayloads.stream().map(ipPayload -> ipPayload.get(0))
                   .toArray(byte[][]::new));
             } else {
-              for (final List<byte[]> ipPayload : ipPayloads) {
+              for (final List<byte[]> ipPayload : idPayloads) {
                 luaQ.removeClaimed(ipPayload.get(0));
               }
             }

@@ -2,7 +2,7 @@
 
 ###Usage
 ```java
-final JedisExecutor jedisExecutor = ...;
+final JedisExecutor jedisExecutor = new DirectJedisExecutor(new Jedis("localhost"));
 
 LuaQScripts.loadMissingScripts(jedisExecutor);
 
@@ -32,8 +32,7 @@ for (final List<byte[]> idPayload : quorbitaLuaQ.claim(claimLimit, blockingClaim
   final String id = new String(idPayload.get(0), StandardCharsets.UTF_8);
   final String payload = new String(idPayload.get(1), StandardCharsets.UTF_8);
 
-  System.out.println(String
-      .format("Claimed message with id '%s' and payload '%s'", id, payload));
+  System.out.printf("Claimed message with id '%s' and payload '%s'.%n", id, payload);
 
   quorbitaLuaQ.removeClaimed(id);
   // quorbitaLuaQ.checkin(id)
@@ -51,7 +50,7 @@ for (final List<byte[]> idPayload : quorbitaLuaQ.claim(claimLimit, blockingClaim
 
 // Otherwise
 final Jedis jedis = new Jedis("localhost", 6379);
-final ThroughputBenchmark benchmark = new ThroughputBenchmark(jedis);
+final ThroughputBenchmark throughputBenchmark = new ThroughputBenchmark(jedis);
 
 final int numJobs = 10000;
 final int payloadSize = 1024;
@@ -61,8 +60,16 @@ final boolean batchRemove = true;
 final int numConsumers = 2;
 final boolean concurrentPubSub = true;
 
-benchmark.run(numJobs, payloadSize, publishBatchSize, concurrentPubSub, consumeBatchSize,
+throughputBenchmark.run(numJobs, payloadSize, publishBatchSize, concurrentPubSub, consumeBatchSize,
 batchRemove, numConsumers);
+
+final LatencyBenchmark latencyBenchmark = new LatencyBenchmark(jedis);
+
+final int numJobs = 10000;
+final int payloadSize = 1024;
+final int numConsumers = 2;
+
+latencyBenchmark.run(numJobs, payloadSize, numConsumers);
 ```
 
 ###Dependency Management
