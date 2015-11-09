@@ -13,23 +13,23 @@ quorbitaLuaQ.clear();
 
 quorbitaLuaQ.publish("ID-1", "PAYLOAD-1".getBytes(StandardCharsets.UTF_8));
 
-final List<byte[]> idPayloads =
-    ImmutableList.of("ID-2".getBytes(StandardCharsets.UTF_8),
-        "PAYLOAD-2".getBytes(StandardCharsets.UTF_8), "ID-3".getBytes(StandardCharsets.UTF_8),
-        "PAYLOAD-3".getBytes(StandardCharsets.UTF_8));
+final List<byte[]> idPayloads = ImmutableList.of(
+      "ID-2".getBytes(StandardCharsets.UTF_8),
+      "PAYLOAD-2".getBytes(StandardCharsets.UTF_8),
+      "ID-3".getBytes(StandardCharsets.UTF_8),
+      "PAYLOAD-3".getBytes(StandardCharsets.UTF_8));
+
 quorbitaLuaQ.publish(idPayloads);
 
+// Block if empty; 0 blocks forever. There are also non blocking claim methods.
 final int blockingClaimTimeoutSeconds = 3;
 
-for (;;) {
-  final List<byte[]> idPayload = quorbitaLuaQ.claim(blockingClaimTimeoutSeconds);
+// Claim at most 10 id payload pairs.
+final byte[] claimLimit = "10".getBytes(StandardCharsets.UTF_8);
 
-  final byte[] idBytes = idPayload.get(0);
-  if (idBytes == null) {
-    break;
-  }
+for (final List<byte[]> idPayload : quorbitaLuaQ.claim(claimLimit, blockingClaimTimeoutSeconds)) {
 
-  final String id = new String(idBytes, StandardCharsets.UTF_8);
+  final String id = new String(idPayload.get(0), StandardCharsets.UTF_8);
   final String payload = new String(idPayload.get(1), StandardCharsets.UTF_8);
 
   System.out.println(String
@@ -43,6 +43,28 @@ for (;;) {
 // quorbitaLuaQ.republishClaimedBefore(System.currentTimeMillis() - 60000);
 ```
 
+###Benchmarking
+```java
+// If you have a pooled executor:
+// final JedisExecutor jedisExecutor = ...
+// final ThroughputBenchmark benchmark = new ThroughputBenchmark(jedisExecutor);
+
+// Otherwise
+final Jedis jedis = new Jedis("localhost", 6379);
+final ThroughputBenchmark benchmark = new ThroughputBenchmark(jedis);
+
+final int numJobs = 10000;
+final int payloadSize = 1024;
+final int publishBatchSize = 100;
+final int consumeBatchSize = 100;
+final boolean batchRemove = true;
+final int numConsumers = 2;
+final boolean concurrentPubSub = true;
+
+benchmark.run(numJobs, payloadSize, publishBatchSize, concurrentPubSub, consumeBatchSize,
+batchRemove, numConsumers);
+```
+
 ###Dependency Management
 ####Gradle
 ```groovy
@@ -51,6 +73,8 @@ repositories {
 }
 
 dependencies {
+   // compile 'redis.clients:jedis:+'
+   // compile 'com.fabahaba:jedipus:+'
    compile 'com.fabahaba:quorbita:+'
 }
 ```

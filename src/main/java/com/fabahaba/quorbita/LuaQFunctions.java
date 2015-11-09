@@ -128,8 +128,8 @@ public final class LuaQFunctions {
       final byte[] claimedQKey, final byte[] payloadsHashKey, final byte[] notifyListKey,
       final byte[] claimLimit) {
 
-    return (List<List<byte[]>>) jedis.evalsha(LuaQScripts.MCLAIM.getSha1Bytes().array(), 4,
-        publishedQKey, claimedQKey, payloadsHashKey, notifyListKey,
+    return (List<List<byte[]>>) jedis.evalsha(LuaQScripts.CLAIM.getSha1Bytes().array(), 4,
+        publishedQKey, claimedQKey, notifyListKey, payloadsHashKey,
         LuaQFunctions.getEpochMillisBytes(), claimLimit);
   }
 
@@ -143,8 +143,8 @@ public final class LuaQFunctions {
       for (;;) {
         @SuppressWarnings("unchecked")
         final List<List<byte[]>> idPayloads =
-            (List<List<byte[]>>) jedis.evalsha(LuaQScripts.MCLAIM.getSha1Bytes().array(), 4,
-                publishedQKey, claimedQKey, payloadsHashKey, notifyListKey,
+            (List<List<byte[]>>) jedis.evalsha(LuaQScripts.CLAIM.getSha1Bytes().array(), 4,
+                publishedQKey, claimedQKey, notifyListKey, payloadsHashKey,
                 LuaQFunctions.getEpochMillisBytes(), claimLimit);
 
         if (idPayloads.isEmpty()) {
@@ -167,8 +167,8 @@ public final class LuaQFunctions {
       for (;;) {
         @SuppressWarnings("unchecked")
         final List<List<byte[]>> idPayloads =
-            (List<List<byte[]>>) jedis.evalsha(LuaQScripts.MCLAIM.getSha1Bytes().array(), 4,
-                publishedQKey, claimedQKey, payloadsHashKey, notifyListKey,
+            (List<List<byte[]>>) jedis.evalsha(LuaQScripts.CLAIM.getSha1Bytes().array(), 4,
+                publishedQKey, claimedQKey, notifyListKey, payloadsHashKey,
                 LuaQFunctions.getEpochMillisBytes(), claimLimit);
 
         if (!idPayloadConsumer.apply(idPayloads))

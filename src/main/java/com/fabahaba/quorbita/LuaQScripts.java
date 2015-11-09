@@ -11,55 +11,33 @@ import java.util.stream.Stream;
 
 public enum LuaQScripts {
 
-  // Returns the claimed id and payload, or just the id if no payload key is given.
-  // KEYS: idsKey claimedIdsKey payloadsHashKey notifyList
-  // ARGS: score
+  // CLAIM Returns at most 'limit' claimed id payload pairs
+  // KEYS: idsKey claimedIdsKey notifyList payloadsHashKey
+  // ARGS: score limit
   //
-  // while true do
+  // local idPayloads = {}
+  // for i = 1, ARGV[2], 1 do
   // __ local id = redis.call('zrange', KEYS[1], 0, 0)[1];
-  // __ if id == nil then return {false, false}; end
+  // __ if id == nil then return idPayloads; end
   //
-  // __ redis.call('lpop', KEYS[4]);
+  // __ redis.call('lpop', KEYS[3]);
   //
   // __ local numAdded = redis.call('zadd', KEYS[2], 'NX', ARGV[1], id);
   // __ redis.call('zremrangebyrank', KEYS[1], 0, 0);
   //
   // __ if numAdded > 0 then
-  // ____ if KEYS[3] then
-  // ______ return {id, redis.call('hget', KEYS[3], id)};
+  // ____ if KEYS[4] then
+  // ______ idPayloads[i] = {id, redis.call('hget', KEYS[4], id)};
+  // ____ else
+  // ______ idPayloads[i] = {id, false};
   // ____ end
-  // ____ return {id, false};
+  // __ else
+  // ____ i = i - 1;
   // __ end
   // end
-  CLAIM2(
-      "while true do local id = redis.call('zrange', KEYS[1], 0, 0)[1]; if id == nil then return {false, false}; end redis.call('lpop', KEYS[4]); local numAdded = redis.call('zadd', KEYS[2], 'NX', ARGV[1], id); redis.call('zremrangebyrank', KEYS[1], 0, 0); if numAdded > 0 then if KEYS[3] then return {id, redis.call('hget', KEYS[3], id)}; end return {id, false}; end end"),
-
-  // MCLAIM Returns at most 'limit' claimed id payload pairs
-  // KEYS: idsKey claimedIdsKey payloadsHashKey notifyList
-  // ARGS: score limit
-  //
-  // local idPayloads = {}
-  // for i = 1, ARGV[2], 1 do
-  // __local id = redis.call('zrange', KEYS[1], 0, 0)[1];
-  // __if id == nil then return idPayloads; end
-  //
-  // __redis.call('lpop', KEYS[4]);
-  //
-  // __local numAdded = redis.call('zadd', KEYS[2], 'NX', ARGV[1], id);
-  // __redis.call('zremrangebyrank', KEYS[1], 0, 0);
-  //
-  // __if numAdded > 0 then
-  // ____if KEYS[3] then
-  // ______idPayloads[i] = {id, redis.call('hget', KEYS[3], id)};
-  // ____end
-  // ____idPayloads[i] = {id, false};
-  // __else
-  // ____i = i - 1;
-  // __end
-  // end
   // return idPayloads;
-  MCLAIM(
-      "local idPayloads = {} for i = 1, ARGV[2], 1 do local id = redis.call('zrange', KEYS[1], 0, 0)[1]; if id == nil then return idPayloads; end redis.call('lpop', KEYS[4]); local numAdded = redis.call('zadd', KEYS[2], 'NX', ARGV[1], id); redis.call('zremrangebyrank', KEYS[1], 0, 0); if numAdded > 0 then if KEYS[3] then idPayloads[i] = {id, redis.call('hget', KEYS[3], id)}; end idPayloads[i] = {id, false}; else i = i - 1; end end return idPayloads;"),
+  CLAIM(
+      "local idPayloads = {} for i = 1, ARGV[2], 1 do local id = redis.call('zrange', KEYS[1], 0, 0)[1]; if id == nil then return idPayloads; end redis.call('lpop', KEYS[3]); local numAdded = redis.call('zadd', KEYS[2], 'NX', ARGV[1], id); redis.call('zremrangebyrank', KEYS[1], 0, 0); if numAdded > 0 then if KEYS[4] then idPayloads[i] = {id, redis.call('hget', KEYS[4], id)}; else idPayloads[i] = {id, false}; end else i = i - 1; end end return idPayloads;"),
 
   // CHECKIN
   // KEYS: claimedIdsKey
