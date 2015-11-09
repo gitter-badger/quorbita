@@ -150,6 +150,8 @@ public interface QuorbitaQ {
 
   public Long getDLQSize();
 
+  public List<Long> getQSizes();
+
   public void scanPublishedPayloads(final Consumer<List<List<byte[]>>> idScorePayloadsConsumer);
 
   public void scanClaimedPayloads(final Consumer<List<List<byte[]>>> idScorePayloadsConsumer);

@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class LuaQ implements QuorbitaQ {
 
@@ -194,6 +195,17 @@ public class LuaQ implements QuorbitaQ {
             getDefaultNumRetries()).stream().mapToLong(Response::get).sum();
   }
 
+
+  @Override
+  public List<Long> getQSizes() {
+
+    return jedisExecutor
+        .applyPipeline(
+            pipeline -> ImmutableList.of(pipeline.zcard(publishedQKey),
+                pipeline.zcard(claimedQKey), pipeline.zcard(dlqKey)), getDefaultNumRetries())
+        .stream().map(Response::get).collect(Collectors.toList());
+  }
+
   @Override
   public Long getDLQSize() {
 
@@ -246,4 +258,5 @@ public class LuaQ implements QuorbitaQ {
   public int hashCode() {
     return Objects.hash(jedisExecutor, qName);
   }
+
 }
