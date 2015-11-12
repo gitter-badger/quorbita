@@ -1,5 +1,7 @@
 #quorbita [![Build Status](https://travis-ci.org/jamespedwards42/quorbita.svg)](https://travis-ci.org/jamespedwards42/quorbita) [![JCenter](https://api.bintray.com/packages/jamespedwards42/libs/quorbita/images/download.svg) ](https://bintray.com/jamespedwards42/libs/quorbita/_latestVersion) [![License](http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat) ](http://www.apache.org/licenses/LICENSE-2.0)
 
+>Quorbita is a Java 8 client library that turns Redis into a reliable message broker.  
+
 ###Usage
 ```java
 final JedisExecutor jedisExecutor = new DirectJedisExecutor(new Jedis("localhost"));
@@ -37,9 +39,6 @@ for (final List<byte[]> idPayload : quorbitaLuaQ.claim(claimLimit, blockingClaim
   quorbitaLuaQ.removeClaimed(id);
   // quorbitaLuaQ.checkin(id)
 }
-
-// republish abandoned ids
-// quorbitaLuaQ.republishClaimedBefore(System.currentTimeMillis() - 60000);
 ```
 
 ###Benchmarking

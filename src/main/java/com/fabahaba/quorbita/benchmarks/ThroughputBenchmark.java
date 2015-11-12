@@ -231,7 +231,7 @@ public class ThroughputBenchmark {
     final int consumeBatchSize = 100;
     final boolean batchRemove = true;
     final int numConsumers = 2;
-    final boolean concurrentPubSub = false;
+    final boolean concurrentPubSub = true;
 
     benchmark.run(numJobs, payloadSize, publishBatchSize, concurrentPubSub, consumeBatchSize,
         batchRemove, numConsumers);
