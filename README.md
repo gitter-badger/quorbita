@@ -47,7 +47,7 @@ for (final List<byte[]> idPayload : quorbitaLuaQ.claim(claimLimit, blockingClaim
 // final JedisExecutor jedisExecutor = ...
 // final ThroughputBenchmark benchmark = new ThroughputBenchmark(jedisExecutor);
 
-// Otherwise
+// Otherwise:
 final Jedis jedis = new Jedis("localhost", 6379);
 final ThroughputBenchmark throughputBenchmark = new ThroughputBenchmark(jedis);
 
@@ -63,10 +63,6 @@ throughputBenchmark.run(numJobs, payloadSize, publishBatchSize, concurrentPubSub
 batchRemove, numConsumers);
 
 final LatencyBenchmark latencyBenchmark = new LatencyBenchmark(jedis);
-
-final int numJobs = 10000;
-final int payloadSize = 1024;
-final int numConsumers = 2;
 
 latencyBenchmark.run(numJobs, payloadSize, numConsumers);
 ```
