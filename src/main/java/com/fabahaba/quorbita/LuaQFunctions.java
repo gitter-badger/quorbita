@@ -48,11 +48,11 @@ public final class LuaQFunctions {
   }
 
   public static Long republishAs(final JedisExecutor jedisExecutor, final byte[] id,
-      final byte[] payload, final byte[] publishedZKey, final byte[] claimedHKey,
+      final byte[] payload, final byte[] publishedZKey, final byte[] hKey,
       final byte[] payloadsHKey, final byte[] notifyLKey, final int numRetries) {
 
     return (Long) jedisExecutor.applyJedis(jedis -> jedis.evalsha(LuaQScripts.REPUBLISH
-        .getSha1Bytes().array(), 4, publishedZKey, claimedHKey, payloadsHKey, notifyLKey,
+        .getSha1Bytes().array(), 4, publishedZKey, hKey, payloadsHKey, notifyLKey,
         LuaQFunctions.getEpochMillisBytes(), id, payload), numRetries);
   }
 
@@ -267,8 +267,8 @@ public final class LuaQFunctions {
   }
 
   public static long remove(final JedisExecutor jedisExecutor, final byte[] publishedZKey,
-      final byte[] claimedHKey, final byte[] payloadsHKey, final int numRetries,
-      final String... ids) {
+      final byte[] claimedHKey, final byte[] deadHKey, final byte[] payloadsHKey,
+      final int numRetries, final String... ids) {
 
     final List<Response<Long>> removedResponses = new ArrayList<>(ids.length);
 
@@ -280,6 +280,7 @@ public final class LuaQFunctions {
 
         removedResponses.add(pipeline.zrem(publishedZKey, idBytes));
         removedResponses.add(pipeline.hdel(claimedHKey, idBytes));
+        removedResponses.add(pipeline.hdel(deadHKey, idBytes));
         pipeline.hdel(payloadsHKey, idBytes);
       }
     }, numRetries);
@@ -288,8 +289,8 @@ public final class LuaQFunctions {
   }
 
   public static long remove(final JedisExecutor jedisExecutor, final byte[] publishedZKey,
-      final byte[] claimedHKey, final byte[] payloadsHKey, final int numRetries,
-      final byte[]... ids) {
+      final byte[] claimedHKey, final byte[] deadHKey, final byte[] payloadsHKey,
+      final int numRetries, final byte[]... ids) {
 
     final List<Response<Long>> removedResponses = new ArrayList<>(ids.length);
 
@@ -299,6 +300,7 @@ public final class LuaQFunctions {
 
         removedResponses.add(pipeline.zrem(publishedZKey, idBytes));
         removedResponses.add(pipeline.hdel(claimedHKey, idBytes));
+        removedResponses.add(pipeline.hdel(deadHKey, idBytes));
         pipeline.hdel(payloadsHKey, idBytes);
       }
     }, numRetries);
@@ -402,8 +404,8 @@ public final class LuaQFunctions {
 
       final byte[] finalCursorRef = cursor;
 
-      final List<?> results =
-          (List<?>) jedisExecutor.applyJedis(jedis -> jedis.evalsha(LuaQScripts.SCAN_PAYLOADS
+      final List<Object> results =
+          (List<Object>) jedisExecutor.applyJedis(jedis -> jedis.evalsha(LuaQScripts.SCAN_PAYLOADS
               .getSha1Bytes().array(), 2, key, payloadsHKey, scanCommand, finalCursorRef, count));
 
       cursor = (byte[]) results.get(0);
@@ -459,6 +461,38 @@ public final class LuaQFunctions {
       cursor = results.getCursorAsBytes();
 
       results.getResult().forEach(idScoresConsumer::accept);
+
+      if (Arrays.equals(cursor, SCAN_SENTINEL_CURSOR))
+        return;
+    }
+  }
+
+  public static void scanPayloadStates(final JedisExecutor jedisExecutor,
+      final byte[] payloadsHKey, final byte[] publishedZKey, final byte[] claimedHKey,
+      final byte[] deadHKey, final Consumer<List<List<Object>>> idPayloadStatesConsumer) {
+
+    LuaQFunctions.scanPayloadStates(jedisExecutor, payloadsHKey, publishedZKey, claimedHKey,
+        deadHKey, DEFAULT_COUNT, idPayloadStatesConsumer);
+  }
+
+  @SuppressWarnings("unchecked")
+  public static void scanPayloadStates(final JedisExecutor jedisExecutor,
+      final byte[] payloadsHKey, final byte[] publishedZKey, final byte[] claimedHKey,
+      final byte[] deadHKey, final byte[] count,
+      final Consumer<List<List<Object>>> idPayloadStatesConsumer) {
+
+    for (byte[] cursor = SCAN_SENTINEL_CURSOR;;) {
+
+      final byte[] finalCursorRef = cursor;
+
+      final List<Object> results =
+          (List<Object>) jedisExecutor.applyJedis(jedis -> jedis.evalsha(
+              LuaQScripts.SCAN_PAYLOAD_STATES.getSha1Bytes().array(), 4, payloadsHKey,
+              publishedZKey, claimedHKey, deadHKey, finalCursorRef, count));
+
+      cursor = (byte[]) results.get(0);
+
+      idPayloadStatesConsumer.accept((List<List<Object>>) results.get(1));
 
       if (Arrays.equals(cursor, SCAN_SENTINEL_CURSOR))
         return;

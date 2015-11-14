@@ -65,6 +65,20 @@ public interface QuorbitaQ {
 
   public Long republishAs(final String id, final byte[] payload, final int numRetries);
 
+  default Long republishDead(final byte[] id) {
+
+    return republishDead(id, getDefaultNumRetries());
+  }
+
+  public Long republishDead(final byte[] id, final int numRetries);
+
+  default Long republishDead(final String id) {
+
+    return republishDead(id, getDefaultNumRetries());
+  }
+
+  public Long republishDead(final String id, final int numRetries);
+
   default Long republishDeadAs(final String id, final byte[] payload) {
 
     return republishDeadAs(id, payload, getDefaultNumRetries());
@@ -182,4 +196,6 @@ public interface QuorbitaQ {
   public void scanClaimedPayloads(final Consumer<List<List<byte[]>>> idScorePayloadsConsumer);
 
   public void scanDeadPayloads(final Consumer<List<List<byte[]>>> idScorePayloadsConsumer);
+
+  public void scanPayloadStates(final Consumer<List<List<Object>>> idPayloadStatesConsumer);
 }

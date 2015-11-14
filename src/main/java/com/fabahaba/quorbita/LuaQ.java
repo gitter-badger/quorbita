@@ -93,6 +93,19 @@ public class LuaQ implements QuorbitaQ {
   }
 
   @Override
+  public Long republishDead(final String id, final int numRetries) {
+
+    return republishDead(id.getBytes(StandardCharsets.UTF_8), numRetries);
+  }
+
+  @Override
+  public Long republishDead(final byte[] id, final int numRetries) {
+
+    return LuaQFunctions.republish(jedisExecutor, id, publishedZKey, deadHKey, payloadsHKey,
+        notifyLKey, numRetries);
+  }
+
+  @Override
   public Long republishDeadAs(final String id, final byte[] payload, final int numRetries) {
 
     return LuaQFunctions.republishAs(jedisExecutor, id.getBytes(StandardCharsets.UTF_8), payload,
@@ -181,14 +194,14 @@ public class LuaQ implements QuorbitaQ {
   @Override
   public long remove(final int numRetries, final String... ids) {
 
-    return LuaQFunctions.remove(jedisExecutor, publishedZKey, claimedHKey, payloadsHKey,
+    return LuaQFunctions.remove(jedisExecutor, publishedZKey, claimedHKey, deadHKey, payloadsHKey,
         numRetries, ids);
   }
 
   @Override
   public long remove(final int numRetries, final byte[]... ids) {
 
-    return LuaQFunctions.remove(jedisExecutor, publishedZKey, claimedHKey, payloadsHKey,
+    return LuaQFunctions.remove(jedisExecutor, publishedZKey, claimedHKey, deadHKey, payloadsHKey,
         numRetries, ids);
   }
 
@@ -277,6 +290,13 @@ public class LuaQ implements QuorbitaQ {
   public void scanDeadPayloads(final Consumer<List<List<byte[]>>> idScorePayloadsConsumer) {
 
     LuaQFunctions.hScanPayloads(jedisExecutor, deadHKey, payloadsHKey, idScorePayloadsConsumer);
+  }
+
+  @Override
+  public void scanPayloadStates(final Consumer<List<List<Object>>> idPayloadStatesConsumer) {
+
+    LuaQFunctions.scanPayloadStates(jedisExecutor, payloadsHKey, publishedZKey, claimedHKey,
+        deadHKey, idPayloadStatesConsumer);
   }
 
   @Override

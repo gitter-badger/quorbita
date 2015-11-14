@@ -76,7 +76,7 @@ public enum LuaQScripts {
       "local numPublished = 0; local i = 2; while ARGV[i] do local claimed = redis.call('hexists', KEYS[2], ARGV[i]); if claimed == 0 then local pi = i+1; if ARGV[pi] then redis.call('hsetnx', KEYS[3], ARGV[i], ARGV[pi]); end local added = redis.call('zadd', KEYS[1], 'NX', ARGV[1], ARGV[i]); if added > 0 then redis.call('lpush', KEYS[4], ARGV[i]); numPublished = numPublished + 1; end end i = i + 2; end return numPublished;"),
 
   // Always returns 1
-  // KEYS: idsZKey claimedIdsHKey payloadsHKey notifyLKey
+  // KEYS: idsZKey hKey payloadsHKey notifyLKey
   // ARGS: score id payload
   //
   // if ARGV[3] then redis.call('hset', KEYS[3], ARGV[2], ARGV[3]); end
@@ -92,11 +92,11 @@ public enum LuaQScripts {
   // ARGS: score id payload
   //
   // if ARGV[3] then redis.call('hset', KEYS[3], ARGV[2], ARGV[3]); end
-  // redis.call('hsetnx', KEYS[1], ARGV[2], ARGV[1]);
+  // redis.call('hset', KEYS[1], ARGV[2], ARGV[1]);
   // redis.call('hdel', KEYS[2], ARGV[2]);
   // return true;
   KILL(
-      "if ARGV[3] then redis.call('hset', KEYS[3], ARGV[2], ARGV[3]); end redis.call('hsetnx', KEYS[1], ARGV[2], ARGV[1]); redis.call('hdel', KEYS[2], ARGV[2]); return true;"),
+      "if ARGV[3] then redis.call('hset', KEYS[3], ARGV[2], ARGV[3]); end redis.call('hset', KEYS[1], ARGV[2], ARGV[1]); redis.call('hdel', KEYS[2], ARGV[2]); return true;"),
 
   // Returns the current cusor and a list of byte[] lists containing an id, score and payload each.
   // KEYS: key payloadsHKey
@@ -115,7 +115,43 @@ public enum LuaQScripts {
   // __ j = j + 1;
   // end
   SCAN_PAYLOADS(
-      "local scanResult = redis.call(ARGV[1], KEYS[1], ARGV[2], 'COUNT', ARGV[3]); local idScores = scanResult[2]; local i = 1; local j = 1; local idScoresPaylods = {}; while true do local id = idScores[i]; if id == nil then return {scanResult[1], idScoresPaylods}; end idScoresPaylods[j] = {id, idScores[i+1], redis.call('hget', KEYS[2], id)}; i = i + 2; j = j + 1; end");
+      "local scanResult = redis.call(ARGV[1], KEYS[1], ARGV[2], 'COUNT', ARGV[3]); local idScores = scanResult[2]; local i = 1; local j = 1; local idScoresPaylods = {}; while true do local id = idScores[i]; if id == nil then return {scanResult[1], idScoresPaylods}; end idScoresPaylods[j] = {id, idScores[i+1], redis.call('hget', KEYS[2], id)}; i = i + 2; j = j + 1; end"),
+
+  // Returns the current cursor and the state of wether a payload is published, claimed, dead or
+  // otherwise orphaned.
+  //
+  // KEYS: payloadsHKey idZKey claimedIdHKey deadHKey
+  // ARGS: cursor count
+  //
+  // local scanResult = redis.call('hscan', KEYS[1], ARGV[1], 'COUNT', ARGV[2]);
+  // local idPayload = scanResult[2];
+  // local i = 1;
+  // local j = 1;
+  // local idPayloadStates = {};
+  // while true do
+  // __ local id = idPayload[i];
+  // __ if id == nil then return {scanResult[1], idPayloadStates}; end
+  // __ local isPublished = redis.call('zscore', KEYS[2], id);
+  // __ if isPublished then
+  // ____ idPayloadStates[j] = {id, true, false, false};
+  // __ else
+  // ____ local isClaimed = redis.call('hexists', KEYS[3], id);
+  // ____ if isClaimed > 0 then
+  // ______ idPayloadStates[j] = {id, false, true, false};
+  // ____ else
+  // ______ local isDead = redis.call('hexists', KEYS[4], id);
+  // ______ if isDead > 0 then
+  // ________ idPayloadStates[j] = {id, false, false, true};
+  // ______ else
+  // ________ idPayloadStates[j] = {id, false, false, false};
+  // ______ end
+  // ____ end
+  // __end
+  // i = i + 2;
+  // j = j + 1;
+  // end
+  SCAN_PAYLOAD_STATES(
+      "local scanResult = redis.call('hscan', KEYS[1], ARGV[1], 'COUNT', ARGV[2]); local idPayload = scanResult[2]; local i = 1; local j = 1; local idPayloadStates = {}; while true do local id = idPayload[i]; if id == nil then return {scanResult[1], idPayloadStates}; end local isPublished = redis.call('zscore', KEYS[2], id); if isPublished then idPayloadStates[j] = {id, true, false, false}; else local isClaimed = redis.call('hexists', KEYS[3], id); if isClaimed > 0 then idPayloadStates[j] = {id, false, true, false}; else local isDead = redis.call('hexists', KEYS[4], id); if isDead > 0 then idPayloadStates[j] = {id, false, false, true}; else idPayloadStates[j] = {id, false, false, false}; end end end i = i + 2; j = j + 1; end");
 
   private transient final String luaScript;
   private transient final String sha1;
