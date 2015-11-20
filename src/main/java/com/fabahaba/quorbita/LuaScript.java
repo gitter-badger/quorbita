@@ -2,6 +2,8 @@ package com.fabahaba.quorbita;
 
 import com.fabahaba.jedipus.JedisExecutor;
 
+import redis.clients.jedis.Jedis;
+
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.stream.Stream;
@@ -18,6 +20,16 @@ public interface LuaScript {
 
     LuaScript.loadMissingScripts(jedisExecutor, this);
   }
+
+  public Object eval(final JedisExecutor jedisExecutor, final int numRetries, final int keyCount,
+      final byte[]... params);
+
+  public Object eval(final JedisExecutor jedisExecutor, final int numRetries,
+      final List<byte[]> keys, final List<byte[]> args);
+
+  public Object eval(final Jedis jedis, final int keyCount, final byte[]... params);
+
+  public Object eval(final Jedis jedis, final List<byte[]> keys, final List<byte[]> args);
 
   public static void loadMissingScripts(final JedisExecutor jedisExecutor,
       final LuaScript... luaScripts) {

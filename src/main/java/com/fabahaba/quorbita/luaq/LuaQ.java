@@ -1,6 +1,7 @@
 package com.fabahaba.quorbita.luaq;
 
 import com.fabahaba.jedipus.JedisExecutor;
+import com.fabahaba.quorbita.BaseQ;
 import com.fabahaba.quorbita.QuorbitaQ;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
@@ -17,41 +18,17 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class LuaQ implements QuorbitaQ {
+public class LuaQ extends BaseQ implements QuorbitaQ {
 
   public static final int DEFAULT_REMOVE_ORPHAN_PAYLOADS_BATCH_SIZE = 100;
 
-  public static final String PUBLISHED_POSTFIX = ":PUBLISHED";
-  public static final String CLAIMED_POSTFIX = ":CLAIMED";
-  public static final String PAYLOADS_POSTFIX = ":PAYLOADS";
-  public static final String NOTIFY_POSTFIX = ":NOTIFY";
-  public static final String DLQ_POSTFIX = ":DEAD";
-
-  private final JedisExecutor jedisExecutor;
-
-  protected final String qName;
-  protected final byte[] publishedZKey;
-  protected final byte[] claimedHKey;
-  protected final byte[] payloadsHKey;
-  protected final byte[] notifyLKey;
-  protected final byte[] deadHKey;
   protected final List<byte[]> keys;
 
   public LuaQ(final JedisExecutor jedisExecutor, final String qName) {
 
-    this.jedisExecutor = jedisExecutor;
-    this.qName = qName;
-    this.publishedZKey = (qName + PUBLISHED_POSTFIX).getBytes(StandardCharsets.UTF_8);
-    this.claimedHKey = (qName + CLAIMED_POSTFIX).getBytes(StandardCharsets.UTF_8);
-    this.payloadsHKey = (qName + PAYLOADS_POSTFIX).getBytes(StandardCharsets.UTF_8);
-    this.notifyLKey = (qName + NOTIFY_POSTFIX).getBytes(StandardCharsets.UTF_8);
-    this.deadHKey = (qName + DLQ_POSTFIX).getBytes(StandardCharsets.UTF_8);
-    this.keys = ImmutableList.of(publishedZKey, claimedHKey, payloadsHKey, notifyLKey);
-  }
+    super(jedisExecutor, qName);
 
-  @Override
-  public JedisExecutor getJedisExecutor() {
-    return jedisExecutor;
+    this.keys = ImmutableList.of(publishedZKey, claimedHKey, payloadsHKey, notifyLKey);
   }
 
   @Override
@@ -298,11 +275,6 @@ public class LuaQ implements QuorbitaQ {
 
     LuaQFunctions.scanPayloadStates(jedisExecutor, payloadsHKey, publishedZKey, claimedHKey,
         deadHKey, idPayloadStatesConsumer);
-  }
-
-  @Override
-  public String getQName() {
-    return qName;
   }
 
   @Override

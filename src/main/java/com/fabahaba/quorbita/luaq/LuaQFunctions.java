@@ -29,9 +29,8 @@ public final class LuaQFunctions {
       final byte[] payload, final byte[] publishedZKey, final byte[] claimedHKey,
       final byte[] payloadsHKey, final byte[] notifyLKey, final int numRetries) {
 
-    return (Long) jedisExecutor.applyJedis(jedis -> jedis.evalsha(LuaQScripts.MPUBLISH
-        .getSha1Bytes().array(), 4, publishedZKey, claimedHKey, payloadsHKey, notifyLKey,
-        LuaQFunctions.getEpochMillisBytes(), id, payload), numRetries);
+    return (Long) LuaQScripts.MPUBLISH.eval(jedisExecutor, numRetries, 4, publishedZKey,
+        claimedHKey, payloadsHKey, notifyLKey, LuaQFunctions.getEpochMillisBytes(), id, payload);
   }
 
   public static Long publish(final JedisExecutor jedisExecutor, final List<byte[]> keys,
@@ -41,44 +40,38 @@ public final class LuaQFunctions {
     args.add(LuaQFunctions.getEpochMillisBytes());
     args.addAll(idPayloads);
 
-    return (Long) jedisExecutor
-        .applyJedis(
-            jedis -> jedis.evalsha(LuaQScripts.MPUBLISH.getSha1Bytes().array(), keys, args),
-            numRetries);
+    return (Long) LuaQScripts.MPUBLISH.eval(jedisExecutor, numRetries, keys, args);
   }
 
   public static Long republishAs(final JedisExecutor jedisExecutor, final byte[] id,
       final byte[] payload, final byte[] publishedZKey, final byte[] hKey, final byte[] notifyLKey,
       final byte[] payloadsHKey, final int numRetries) {
 
-    return (Long) jedisExecutor.applyJedis(jedis -> jedis.evalsha(LuaQScripts.REPUBLISH
-        .getSha1Bytes().array(), 4, publishedZKey, hKey, notifyLKey, payloadsHKey, LuaQFunctions
-        .getEpochMillisBytes(), id, payload), numRetries);
+    return (Long) LuaQScripts.REPUBLISH.eval(jedisExecutor, numRetries, 4, publishedZKey, hKey,
+        notifyLKey, payloadsHKey, LuaQFunctions.getEpochMillisBytes(), id, payload);
   }
 
   public static Long republish(final JedisExecutor jedisExecutor, final byte[] id,
       final byte[] publishedZKey, final byte[] claimedHKey, final byte[] notifyLKey,
       final int numRetries) {
 
-    return (Long) jedisExecutor.applyJedis(jedis -> jedis.evalsha(LuaQScripts.REPUBLISH
-        .getSha1Bytes().array(), 3, publishedZKey, claimedHKey, notifyLKey, LuaQFunctions
-        .getEpochMillisBytes(), id), numRetries);
+    return (Long) LuaQScripts.REPUBLISH.eval(jedisExecutor, numRetries, 3, publishedZKey,
+        claimedHKey, notifyLKey, LuaQFunctions.getEpochMillisBytes(), id);
   }
 
   public static Long killAs(final JedisExecutor jedisExecutor, final byte[] id,
       final byte[] payload, final byte[] deadHKey, final byte[] claimedHKey,
       final byte[] payloadsHKey, final int numRetries) {
 
-    return (Long) jedisExecutor.applyJedis(jedis -> jedis.evalsha(LuaQScripts.KILL.getSha1Bytes()
-        .array(), 3, deadHKey, claimedHKey, payloadsHKey, LuaQFunctions.getEpochMillisBytes(), id,
-        payload), numRetries);
+    return (Long) LuaQScripts.KILL.eval(jedisExecutor, numRetries, 3, deadHKey, claimedHKey,
+        payloadsHKey, LuaQFunctions.getEpochMillisBytes(), id, payload);
   }
 
   public static Long kill(final JedisExecutor jedisExecutor, final byte[] id,
       final byte[] deadHKey, final byte[] claimedHKey, final int numRetries) {
 
-    return (Long) jedisExecutor.applyJedis(jedis -> jedis.evalsha(LuaQScripts.KILL.getSha1Bytes()
-        .array(), 2, deadHKey, claimedHKey, LuaQFunctions.getEpochMillisBytes(), id), numRetries);
+    return (Long) LuaQScripts.KILL.eval(jedisExecutor, numRetries, 2, deadHKey, claimedHKey,
+        LuaQFunctions.getEpochMillisBytes(), id);
   }
 
   public static List<List<byte[]>> claim(final JedisExecutor jedisExecutor,
@@ -126,9 +119,8 @@ public final class LuaQFunctions {
       final byte[] claimedHKey, final byte[] payloadsHKey, final byte[] notifyListKey,
       final byte[] claimLimit) {
 
-    return (List<List<byte[]>>) jedis.evalsha(LuaQScripts.CLAIM.getSha1Bytes().array(), 4,
-        publishedZKey, claimedHKey, notifyListKey, payloadsHKey,
-        LuaQFunctions.getEpochMillisBytes(), claimLimit);
+    return (List<List<byte[]>>) LuaQScripts.CLAIM.eval(jedis, 4, publishedZKey, claimedHKey,
+        notifyListKey, payloadsHKey, LuaQFunctions.getEpochMillisBytes(), claimLimit);
   }
 
   public static void consume(final JedisExecutor jedisExecutor, final byte[] publishedZKey,
@@ -141,9 +133,8 @@ public final class LuaQFunctions {
       for (;;) {
         @SuppressWarnings("unchecked")
         final List<List<byte[]>> idPayloads =
-            (List<List<byte[]>>) jedis.evalsha(LuaQScripts.CLAIM.getSha1Bytes().array(), 4,
-                publishedZKey, claimedHKey, notifyLKey, payloadsHKey,
-                LuaQFunctions.getEpochMillisBytes(), claimLimit);
+            (List<List<byte[]>>) LuaQScripts.CLAIM.eval(jedis, 4, publishedZKey, claimedHKey,
+                notifyLKey, payloadsHKey, LuaQFunctions.getEpochMillisBytes(), claimLimit);
 
         if (idPayloads.isEmpty()) {
           jedis.blpop(maxBlockOnEmptyQSeconds, notifyLKey);
@@ -165,9 +156,8 @@ public final class LuaQFunctions {
       for (;;) {
         @SuppressWarnings("unchecked")
         final List<List<byte[]>> idPayloads =
-            (List<List<byte[]>>) jedis.evalsha(LuaQScripts.CLAIM.getSha1Bytes().array(), 4,
-                publishedZKey, claimedHKey, notifyLKey, payloadsHKey,
-                LuaQFunctions.getEpochMillisBytes(), claimLimit);
+            (List<List<byte[]>>) LuaQScripts.CLAIM.eval(jedis, 4, publishedZKey, claimedHKey,
+                notifyLKey, payloadsHKey, LuaQFunctions.getEpochMillisBytes(), claimLimit);
 
         if (!idPayloadConsumer.apply(idPayloads))
           return;
@@ -403,8 +393,8 @@ public final class LuaQFunctions {
       final byte[] finalCursorRef = cursor;
 
       final List<Object> results =
-          (List<Object>) jedisExecutor.applyJedis(jedis -> jedis.evalsha(LuaQScripts.SCAN_PAYLOADS
-              .getSha1Bytes().array(), 2, key, payloadsHKey, scanCommand, finalCursorRef, count));
+          (List<Object>) LuaQScripts.SCAN_PAYLOADS.eval(jedisExecutor, 1, 2, key, payloadsHKey,
+              scanCommand, finalCursorRef, count);
 
       cursor = (byte[]) results.get(0);
 
@@ -484,9 +474,8 @@ public final class LuaQFunctions {
       final byte[] finalCursorRef = cursor;
 
       final List<Object> results =
-          (List<Object>) jedisExecutor.applyJedis(jedis -> jedis.evalsha(
-              LuaQScripts.SCAN_PAYLOAD_STATES.getSha1Bytes().array(), 4, payloadsHKey,
-              publishedZKey, claimedHKey, deadHKey, finalCursorRef, count));
+          (List<Object>) LuaQScripts.SCAN_PAYLOAD_STATES.eval(jedisExecutor, 0, 4, payloadsHKey,
+              publishedZKey, claimedHKey, deadHKey, finalCursorRef, count);
 
       cursor = (byte[]) results.get(0);
 

@@ -13,7 +13,7 @@ public abstract class BaseQ {
   public static final String NOTIFY_POSTFIX = ":NOTIFY";
   public static final String DLQ_POSTFIX = ":DEAD";
 
-  private final JedisExecutor jedisExecutor;
+  protected final JedisExecutor jedisExecutor;
 
   protected final String qName;
   protected final byte[] publishedZKey;
@@ -35,6 +35,10 @@ public abstract class BaseQ {
 
   public JedisExecutor getJedisExecutor() {
     return jedisExecutor;
+  }
+
+  public String getQName() {
+    return qName;
   }
 
   @Override
