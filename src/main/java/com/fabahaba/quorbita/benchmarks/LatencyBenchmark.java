@@ -3,8 +3,8 @@ package com.fabahaba.quorbita.benchmarks;
 import com.fabahaba.fava.collect.MapUtils;
 import com.fabahaba.jedipus.DirectJedisExecutor;
 import com.fabahaba.jedipus.JedisExecutor;
-import com.fabahaba.quorbita.LuaQ;
-import com.fabahaba.quorbita.LuaQScripts;
+import com.fabahaba.quorbita.luaq.LuaQ;
+import com.fabahaba.quorbita.luaq.LuaQScripts;
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.Futures;
 

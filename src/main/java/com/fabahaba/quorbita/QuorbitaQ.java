@@ -1,6 +1,7 @@
 package com.fabahaba.quorbita;
 
 import com.fabahaba.jedipus.JedisExecutor;
+import com.fabahaba.quorbita.luaq.LuaQFunctions;
 
 import redis.clients.jedis.ScanParams;
 

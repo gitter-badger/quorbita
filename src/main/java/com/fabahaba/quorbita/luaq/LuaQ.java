@@ -1,6 +1,7 @@
-package com.fabahaba.quorbita;
+package com.fabahaba.quorbita.luaq;
 
 import com.fabahaba.jedipus.JedisExecutor;
+import com.fabahaba.quorbita.QuorbitaQ;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 
@@ -28,13 +29,13 @@ public class LuaQ implements QuorbitaQ {
 
   private final JedisExecutor jedisExecutor;
 
-  private final String qName;
-  private final byte[] publishedZKey;
-  private final byte[] claimedHKey;
-  private final byte[] payloadsHKey;
-  private final byte[] notifyLKey;
-  private final byte[] deadHKey;
-  private final List<byte[]> keys;
+  protected final String qName;
+  protected final byte[] publishedZKey;
+  protected final byte[] claimedHKey;
+  protected final byte[] payloadsHKey;
+  protected final byte[] notifyLKey;
+  protected final byte[] deadHKey;
+  protected final List<byte[]> keys;
 
   public LuaQ(final JedisExecutor jedisExecutor, final String qName) {
 
@@ -81,15 +82,15 @@ public class LuaQ implements QuorbitaQ {
   @Override
   public Long republish(final byte[] id, final int numRetries) {
 
-    return LuaQFunctions.republish(jedisExecutor, id, publishedZKey, claimedHKey, payloadsHKey,
-        notifyLKey, numRetries);
+    return LuaQFunctions.republish(jedisExecutor, id, publishedZKey, claimedHKey, notifyLKey,
+        numRetries);
   }
 
   @Override
   public Long republishAs(final String id, final byte[] payload, final int numRetries) {
 
     return LuaQFunctions.republishAs(jedisExecutor, id.getBytes(StandardCharsets.UTF_8), payload,
-        publishedZKey, claimedHKey, payloadsHKey, notifyLKey, numRetries);
+        publishedZKey, claimedHKey, notifyLKey, payloadsHKey, numRetries);
   }
 
   @Override
@@ -101,22 +102,22 @@ public class LuaQ implements QuorbitaQ {
   @Override
   public Long republishDead(final byte[] id, final int numRetries) {
 
-    return LuaQFunctions.republish(jedisExecutor, id, publishedZKey, deadHKey, payloadsHKey,
-        notifyLKey, numRetries);
+    return LuaQFunctions.republish(jedisExecutor, id, publishedZKey, deadHKey, notifyLKey,
+        numRetries);
   }
 
   @Override
   public Long republishDeadAs(final String id, final byte[] payload, final int numRetries) {
 
     return LuaQFunctions.republishAs(jedisExecutor, id.getBytes(StandardCharsets.UTF_8), payload,
-        publishedZKey, deadHKey, payloadsHKey, notifyLKey, numRetries);
+        publishedZKey, deadHKey, notifyLKey, payloadsHKey, numRetries);
   }
 
   @Override
   public Long kill(final String id, final int numRetries) {
 
     return LuaQFunctions.kill(jedisExecutor, id.getBytes(StandardCharsets.UTF_8), deadHKey,
-        claimedHKey, payloadsHKey, numRetries);
+        claimedHKey, numRetries);
   }
 
   @Override
