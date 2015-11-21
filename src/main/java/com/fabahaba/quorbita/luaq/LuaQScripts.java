@@ -14,7 +14,7 @@ import java.util.Locale;
 public enum LuaQScripts implements LuaScript {
 
   CLAIM,
-  MPUBLISH,
+  PUBLISH,
   REPUBLISH,
   KILL,
   SCAN_PAYLOADS,

@@ -3,7 +3,6 @@ package com.fabahaba.quorbita.reduceq;
 import com.fabahaba.jedipus.JedisExecutor;
 import com.fabahaba.quorbita.LuaScript;
 import com.fabahaba.quorbita.LuaScriptData;
-import com.fabahaba.quorbita.luaq.LuaQScripts;
 import com.google.common.base.MoreObjects;
 
 import redis.clients.jedis.Jedis;
@@ -15,7 +14,8 @@ import java.util.Locale;
 public enum ReduceQScripts implements LuaScript {
 
   PUBLISH_EPOCH_REDUCIBLE,
-  PUBLISH_REDUCIBLE;
+  PUBLISH_REDUCIBLE,
+  PUBLISH_RESULTS;
 
   private transient final LuaScriptData luaScript;
 
@@ -70,7 +70,7 @@ public enum ReduceQScripts implements LuaScript {
 
   public static void loadMissingScripts(final JedisExecutor jedisExecutor) {
 
-    LuaScript.loadMissingScripts(jedisExecutor, LuaQScripts.values());
+    LuaScript.loadMissingScripts(jedisExecutor, ReduceQScripts.values());
   }
 
   @Override

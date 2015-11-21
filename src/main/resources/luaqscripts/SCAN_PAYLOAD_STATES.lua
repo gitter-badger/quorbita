@@ -18,6 +18,7 @@ local j = 1;
 local idPayloadStates = {};
 
 while true do
+
    local id = idPayload[i];
    if id == nil then
       return {scanResult[1], idPayloadStates};

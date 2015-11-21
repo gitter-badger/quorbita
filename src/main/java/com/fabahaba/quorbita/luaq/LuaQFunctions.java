@@ -29,7 +29,7 @@ public final class LuaQFunctions {
       final byte[] payload, final byte[] publishedZKey, final byte[] claimedHKey,
       final byte[] payloadsHKey, final byte[] notifyLKey, final int numRetries) {
 
-    return (Long) LuaQScripts.MPUBLISH.eval(jedisExecutor, numRetries, 4, publishedZKey,
+    return (Long) LuaQScripts.PUBLISH.eval(jedisExecutor, numRetries, 4, publishedZKey,
         claimedHKey, payloadsHKey, notifyLKey, LuaQFunctions.getEpochMillisBytes(), id, payload);
   }
 
@@ -40,7 +40,7 @@ public final class LuaQFunctions {
     args.add(LuaQFunctions.getEpochMillisBytes());
     args.addAll(idPayloads);
 
-    return (Long) LuaQScripts.MPUBLISH.eval(jedisExecutor, numRetries, keys, args);
+    return (Long) LuaQScripts.PUBLISH.eval(jedisExecutor, numRetries, keys, args);
   }
 
   public static Long republishAs(final JedisExecutor jedisExecutor, final byte[] id,

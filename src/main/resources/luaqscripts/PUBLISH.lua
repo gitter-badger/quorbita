@@ -16,11 +16,9 @@ while ARGV[i] do
 
    local claimed = redis.call('hexists', KEYS[2], ARGV[i]);
    if claimed == 0 then
-
-      redis.call('hsetnx', KEYS[3], ARGV[i], ARGV[i+1]);
-
       local added = redis.call('zadd', KEYS[1], 'NX', ARGV[1], ARGV[i]);
       if added > 0 then
+         redis.call('hsetnx', KEYS[3], ARGV[i], ARGV[i+1]);
          redis.call('lpush', KEYS[4], ARGV[i]);
          numPublished = numPublished + 1;
       end
