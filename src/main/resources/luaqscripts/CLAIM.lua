@@ -1,4 +1,4 @@
--- CLAIM Returns at most 'limit' claimed id payload pairs
+-- Returns at most 'limit' claimed id payload pairs
 
 -- KEYS:
 --  (1) publishedZKey
@@ -26,7 +26,7 @@ for i = 1, ARGV[2], 1 do
       i = i - 1;
    end
 
-   redis.call('zremrangebyrank', KEYS[1], 0, 0);
+   redis.call('zrem', KEYS[1], id);
    redis.call('lpop', KEYS[3]);
 end
 

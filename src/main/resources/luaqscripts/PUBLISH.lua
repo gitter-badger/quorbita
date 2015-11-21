@@ -1,4 +1,5 @@
 -- Returns the number of published items, ignoring existing id entries.
+
 -- KEYS:
 --  (1) publishedZKey
 --  (2) claimedHKey

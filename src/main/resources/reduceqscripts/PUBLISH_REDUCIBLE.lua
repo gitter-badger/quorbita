@@ -5,22 +5,23 @@
 --  (2) claimedHKey
 --  (3) payloadsHKey
 --  (4) notifyLKey
---  (5) reducePendingSKey
+--  (5) pendingMappedSKey
+--  (6) publishedReduceZKey
+--  (7) claimedReduceHKey
 
 -- ARGS:
 --  (1) score
---  (2 3 ...) id payload
+--  (2) reduceId
+--  (3 4 ...) id payload
 
 
 local numPublished = 0;
-local i = 2;
+local i = 3;
 
 while true do
 
    local id = ARGV[i];
-   if id == nil then
-      return numPublished;
-   end
+   if id == nil then break end
 
    local claimed = redis.call('hexists', KEYS[2], id);
    if claimed == 0 then
@@ -35,3 +36,12 @@ while true do
 
    i = i + 2;
 end
+
+local claimed = redis.call('hexists', KEYS[7], ARGV[2]);
+if claimed == 0 then
+   redis.call('zadd', KEYS[6], 'XX', 'INCR', numPublished, ARGV[2]);
+else
+   redis.call('hincrby', KEYS[7], ARGV[2], numPublished);
+end
+
+return numPublished;

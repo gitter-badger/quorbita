@@ -5,10 +5,10 @@
 --  (2) claimedHKey
 --  (3) payloadsHKey
 --  (4) notifyLKey
---  (5) reducePendingSKey
---  (6) reducePublishedZkey
---  (7) reduceClaimedHKey
---  (8) reducePayloadsHKey
+--  (5) pendingMappedSKey
+--  (6) publishedReduceZKey
+--  (7) claimedReduceHKey
+--  (8) payloadsReduceHKey
 
 -- ARGS:
 --  (1) score
@@ -43,7 +43,9 @@ end
 local claimed = redis.call('hexists', KEYS[7], ARGV[2]);
 if claimed == 0 then
    redis.call('hsetnx', KEYS[8], ARGV[2], ARGV[3]);
-   redis.call('zadd', KEYS[6], 'NX', ARGV[1], ARGV[2]);
+   redis.call('zadd', KEYS[6], 'INCR', numPublished, ARGV[2]);
+else
+   redis.call('hincrby', KEYS[7], ARGV[2], numPublished);
 end
 
 return numPublished;

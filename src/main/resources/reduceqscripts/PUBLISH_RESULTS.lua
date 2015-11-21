@@ -1,37 +1,42 @@
 -- Returns 1 if the result was set, or 0 if a result already exists.
--- Notifies idle published reduce queue if at most 'notifyReducedThreshold' pending results exist.
+-- Notifies idle published reduce queue if zero mapped results are pending.
 
 -- KEYS:
 --  (1) publishedReduceZKey
---  (2) mappedResultsHKey
---  (3) pendingMappedSKey
---  (4) notifyReducedLKey
---  (5) notifyMappedResultsLKey
---  (6) claimedHKey
---  (7) payloadsHKey
+--  (2) claimedReduceHKey
+--  (3) mappedResultsHKey
+--  (4) pendingMappedSKey
+--  (5) notifyReducedLKey
+--  (6) notifyMappedResultsLKey
+--  (7) claimedHKey
+--  (8) payloadsHKey
 
 -- ARGS:
 --  (1) reduceId
 --  (2) id
 --  (3) resultsPayload
---  (4) notifyReducedThreshold
 
-local setResult = redis.call('hsetnx', KEYS[2], ARGV[2], ARGV[3]);
-redis.call('sdel', KEYS[3], ARGV[2]);
+local setResult = redis.call('hsetnx', KEYS[3], ARGV[2], ARGV[3]);
+redis.call('srem', KEYS[4], ARGV[2]);
 
 if setResult > 0 then
-   redis.call('lpush', KEYS[5], ARGV[2]);
+   redis.call('lpush', KEYS[6], ARGV[2]);
 
-   local numPending = redis.call('scard', KEYS[3]);
-   if numPending <= ARGV[4] then
-      local isPublished = redis.call('zscore', KEYS[1], ARGV[1]);
-      if isPublished then
-         redis.call('lpush', KEYS[4], ARGV[2]);
+   local claimed = redis.call('hexists', KEYS[2], ARGV[1]);
+   if claimed == 0 then
+      local changed = redis.call('zadd', KEYS[1], 'XX', 'CH', 'INCR', -1, ARGV[1]);
+      if changed > 0 then
+         local numPending = redis.call('scard', KEYS[4]);
+         if numPending == 0 then
+            redis.call('lpush', KEYS[5], ARGV[1]);
+         end
       end
+   else
+      redis.call('hincrby', KEYS[2], ARGV[1], -1);
    end
 end
 
-redis.call('hdel', KEYS[6], ARGV[2]);
 redis.call('hdel', KEYS[7], ARGV[2]);
+redis.call('hdel', KEYS[8], ARGV[2]);
 
 return setResult;
