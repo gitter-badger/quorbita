@@ -15,7 +15,10 @@ public enum ReduceQScripts implements LuaScript {
 
   PUBLISH_EPOCH_REDUCIBLE,
   PUBLISH_REDUCIBLE,
-  PUBLISH_RESULTS;
+  PUBLISH_RESULTS,
+  CLAIM_REDUCIBLE,
+  REPUBLISH_REDUCIBLE,
+  KILL_REDUCIBLE;
 
   private transient final LuaScriptData luaScript;
 
