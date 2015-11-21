@@ -13,9 +13,9 @@ public class ReduceQ extends BaseQ {
   public static final String NOTIFY_REDUCE_POSTFIX = ":R:NOTIFY";
   public static final String DLQ_REDUCE_POSTFIX = ":R:DEAD";
 
-  public static final String PENDING_REDUCE_POSTFIX = ":R:PENDING:";
-  public static final String RESULTS_REDUCE_POSTFIX = ":R:RESULTS:";
-  public static final String NOTIFY_RESULTS_REDUCE_POSTFIX = ":R:NOTIFY:";
+  public static final String PENDING_MAPPED_POSTFIX = ":R:PENDING:";
+  public static final String MAPPED_RESULTS_POSTFIX = ":R:RESULTS:";
+  public static final String MAPPED_RESULTS_NOTIFY_POSTFIX = ":R:NOTIFY:";
 
   protected final byte[] publishedReduceZKey;
   protected final byte[] claimedReduceHKey;
@@ -23,9 +23,9 @@ public class ReduceQ extends BaseQ {
   protected final byte[] notifyReduceLKey;
   protected final byte[] deadReduceHKey;
 
-  protected final byte[] pendingReduceSKey;
-  protected final byte[] resultsReduceHKey;
-  protected final byte[] resultsNotifyReduceLKey;
+  protected final byte[] pendingMappedSKey;
+  protected final byte[] mappedResultsHKey;
+  protected final byte[] mappedResultsNotifyLKey;
 
   public ReduceQ(final JedisExecutor jedisExecutor, final String qName) {
 
@@ -37,10 +37,10 @@ public class ReduceQ extends BaseQ {
     this.notifyReduceLKey = (qName + NOTIFY_REDUCE_POSTFIX).getBytes(StandardCharsets.UTF_8);
     this.deadReduceHKey = (qName + DLQ_REDUCE_POSTFIX).getBytes(StandardCharsets.UTF_8);
 
-    this.pendingReduceSKey = (qName + PENDING_REDUCE_POSTFIX).getBytes(StandardCharsets.UTF_8);
-    this.resultsReduceHKey = (qName + RESULTS_REDUCE_POSTFIX).getBytes(StandardCharsets.UTF_8);
-    this.resultsNotifyReduceLKey =
-        (qName + NOTIFY_RESULTS_REDUCE_POSTFIX).getBytes(StandardCharsets.UTF_8);
+    this.pendingMappedSKey = (qName + PENDING_MAPPED_POSTFIX).getBytes(StandardCharsets.UTF_8);
+    this.mappedResultsHKey = (qName + MAPPED_RESULTS_POSTFIX).getBytes(StandardCharsets.UTF_8);
+    this.mappedResultsNotifyLKey =
+        (qName + MAPPED_RESULTS_NOTIFY_POSTFIX).getBytes(StandardCharsets.UTF_8);
   }
 
 }
