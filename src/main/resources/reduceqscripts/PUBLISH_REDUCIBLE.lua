@@ -11,12 +11,14 @@
 
 -- ARGS:
 --  (1) score
---  (2) reduceId
---  (3 4 ...) id payload
+--  (2) reduceWeight
+--  (3) reduceId
+--  (4 5 ...) id payload
 
 
 local numPublished = 0;
-local i = 3;
+local weight = 0;
+local i = 4;
 
 while true do
 
@@ -31,17 +33,18 @@ while true do
          redis.call('sadd', KEYS[5], id);
          redis.call('lpush', KEYS[4], id);
          numPublished = numPublished + 1;
+         weight = weight + ARGV[2]
       end
    end
 
    i = i + 2;
 end
 
-local claimed = redis.call('hexists', KEYS[7], ARGV[2]);
+local claimed = redis.call('hexists', KEYS[7], ARGV[3]);
 if claimed == 0 then
-   redis.call('zadd', KEYS[6], 'XX', 'INCR', numPublished, ARGV[2]);
+   redis.call('zadd', KEYS[6], 'XX', 'INCR', weight, ARGV[3]);
 else
-   redis.call('hincrby', KEYS[7], ARGV[2], numPublished);
+   redis.call('hincrby', KEYS[7], ARGV[3], weight);
 end
 
 return numPublished;
