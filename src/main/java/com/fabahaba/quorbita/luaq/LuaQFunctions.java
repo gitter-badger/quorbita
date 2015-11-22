@@ -33,14 +33,24 @@ public final class LuaQFunctions {
         claimedHKey, payloadsHKey, notifyLKey, LuaQFunctions.getEpochMillisBytes(), id, payload);
   }
 
-  public static Long publish(final JedisExecutor jedisExecutor, final List<byte[]> keys,
+  public static Long publish(final JedisExecutor jedisExecutor, final byte[] publishedZKey,
+      final byte[] claimedHKey, final byte[] payloadsHKey, final byte[] notifyLKey,
       final Collection<byte[]> idPayloads, final int numRetries) {
 
-    final List<byte[]> args = new ArrayList<>(idPayloads.size() + 1);
-    args.add(LuaQFunctions.getEpochMillisBytes());
-    args.addAll(idPayloads);
+    final byte[][] params = new byte[5 + idPayloads.size()][];
 
-    return (Long) LuaQScripts.PUBLISH.eval(jedisExecutor, numRetries, keys, args);
+    params[0] = publishedZKey;
+    params[1] = claimedHKey;
+    params[2] = payloadsHKey;
+    params[3] = notifyLKey;
+    params[4] = LuaQFunctions.getEpochMillisBytes();
+
+    int i = 5;
+    for (final byte[] idOrPayload : idPayloads) {
+      params[i++] = idOrPayload;
+    }
+
+    return (Long) LuaQScripts.PUBLISH.eval(jedisExecutor, numRetries, 4, params);
   }
 
   public static Long republishAs(final JedisExecutor jedisExecutor, final byte[] id,

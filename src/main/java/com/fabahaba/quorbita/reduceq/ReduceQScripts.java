@@ -15,7 +15,7 @@ public enum ReduceQScripts implements LuaScript {
 
   PUBLISH_EPOCH_REDUCIBLE,
   PUBLISH_REDUCIBLE,
-  PUBLISH_RESULTS,
+  PUBLISH_MAPPED_RESULTS,
   CLAIM_REDUCIBLE,
   REPUBLISH_REDUCIBLE,
   KILL_REDUCIBLE;
@@ -25,9 +25,8 @@ public enum ReduceQScripts implements LuaScript {
   private ReduceQScripts() {
 
     this.luaScript =
-        new LuaScriptData("src/main/resources/"
-            + ReduceQScripts.class.getSimpleName().toLowerCase(Locale.ENGLISH) + "/" + name()
-            + ".lua");
+        new LuaScriptData("/" + ReduceQScripts.class.getSimpleName().toLowerCase(Locale.ENGLISH)
+            + "/" + name() + ".lua");
   }
 
   @Override

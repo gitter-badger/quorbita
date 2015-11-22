@@ -6,8 +6,9 @@
 --  (3) payloadsHKey
 --  (4) notifyLKey
 --  (5) pendingMappedSKey
---  (6) publishedReduceZKey
---  (7) claimedReduceHKey
+--  (6) mappedResultsHKey
+--  (7) publishedReduceZKey
+--  (8) claimedReduceHKey
 
 -- ARGS:
 --  (1) score
@@ -25,26 +26,25 @@ while true do
    local id = ARGV[i];
    if id == nil then break end
 
-   local claimed = redis.call('hexists', KEYS[2], id);
-   if claimed == 0 then
-      local added = redis.call('zadd', KEYS[1], 'NX', ARGV[1], id);
-      if added > 0 then
-         redis.call('hsetnx', KEYS[3], id, ARGV[i+1]);
-         redis.call('sadd', KEYS[5], id);
-         redis.call('lpush', KEYS[4], id);
-         numPublished = numPublished + 1;
-         weight = weight + ARGV[2]
+   if redis.call('hexists', KEYS[2], id) == 0 then
+      if redis.call('hexists', KEYS[6], id) == 0 then
+         if redis.call('zadd', KEYS[1], 'NX', ARGV[1], id) > 0 then
+            redis.call('hsetnx', KEYS[3], id, ARGV[i+1]);
+            redis.call('sadd', KEYS[5], id);
+            redis.call('lpush', KEYS[4], id);
+            numPublished = numPublished + 1;
+            weight = weight + ARGV[2]
+         end
       end
    end
 
    i = i + 2;
 end
 
-local claimed = redis.call('hexists', KEYS[7], ARGV[3]);
-if claimed == 0 then
-   redis.call('zadd', KEYS[6], 'XX', 'INCR', weight, ARGV[3]);
+if redis.call('hexists', KEYS[8], ARGV[3]) == 0 then
+   redis.call('zadd', KEYS[7], 'XX', 'INCR', weight, ARGV[3]);
 else
-   redis.call('hincrby', KEYS[7], ARGV[3], weight);
+   redis.call('hincrby', KEYS[8], ARGV[3], weight);
 end
 
 return numPublished;

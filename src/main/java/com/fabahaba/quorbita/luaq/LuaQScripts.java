@@ -25,8 +25,8 @@ public enum LuaQScripts implements LuaScript {
   private LuaQScripts() {
 
     this.luaScript =
-        new LuaScriptData("src/main/resources/"
-            + LuaQScripts.class.getSimpleName().toLowerCase(Locale.ENGLISH) + "/" + name() + ".lua");
+        new LuaScriptData("/" + LuaQScripts.class.getSimpleName().toLowerCase(Locale.ENGLISH) + "/"
+            + name() + ".lua");
   }
 
   @Override

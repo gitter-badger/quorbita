@@ -4,18 +4,16 @@ import com.fabahaba.jedipus.JedisExecutor;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Throwables;
 import com.google.common.hash.Hashing;
+import com.google.common.io.Resources;
 
 import redis.clients.jedis.Jedis;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class LuaScriptData implements LuaScript {
 
@@ -24,12 +22,13 @@ public class LuaScriptData implements LuaScript {
   private final ByteBuffer sha1ByteBuffer;
   private final byte[] sha1Bytes;
 
-  public LuaScriptData(final String fileName) {
+  public LuaScriptData(final String resourcePath) {
 
-    try (final Stream<String> scriptLines = Files.lines(Paths.get(fileName))) {
-
+    try {
       this.luaScript =
-          scriptLines.filter(l -> !l.isEmpty() && !l.contains("--"))
+          Resources
+              .readLines(Resources.getResource(LuaScriptData.class, resourcePath),
+                  StandardCharsets.UTF_8).stream().filter(l -> !l.isEmpty() && !l.contains("--"))
               .collect(Collectors.joining(" ")).replaceAll("\\s+", " ");
 
       this.sha1 = Hashing.sha1().hashString(luaScript, StandardCharsets.UTF_8).toString();
@@ -92,14 +91,16 @@ public class LuaScriptData implements LuaScript {
   public boolean equals(final Object other) {
     if (this == other)
       return true;
-    if (!(other instanceof LuaScriptData))
+    if (other == null)
       return false;
-    final LuaScriptData castOther = (LuaScriptData) other;
-    return Objects.equals(sha1, castOther.sha1);
+    if (!getClass().equals(other.getClass()))
+      return false;
+    final LuaScriptData castOther = LuaScriptData.class.cast(other);
+    return Arrays.equals(sha1Bytes, castOther.sha1Bytes);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(sha1);
+    return Arrays.hashCode(sha1Bytes);
   }
 }

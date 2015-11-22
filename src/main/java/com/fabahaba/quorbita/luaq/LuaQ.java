@@ -22,13 +22,9 @@ public class LuaQ extends BaseQ implements QuorbitaQ {
 
   public static final int DEFAULT_REMOVE_ORPHAN_PAYLOADS_BATCH_SIZE = 100;
 
-  protected final List<byte[]> keys;
-
   public LuaQ(final JedisExecutor jedisExecutor, final String qName) {
 
     super(jedisExecutor, qName);
-
-    this.keys = ImmutableList.of(publishedZKey, claimedHKey, payloadsHKey, notifyLKey);
   }
 
   @Override
@@ -47,7 +43,8 @@ public class LuaQ extends BaseQ implements QuorbitaQ {
   @Override
   public Long publish(final Collection<byte[]> idPayloads, final int numRetries) {
 
-    return LuaQFunctions.publish(jedisExecutor, keys, idPayloads, numRetries);
+    return LuaQFunctions.publish(jedisExecutor, publishedZKey, claimedHKey, payloadsHKey,
+        notifyLKey, idPayloads, numRetries);
   }
 
   @Override
@@ -287,9 +284,11 @@ public class LuaQ extends BaseQ implements QuorbitaQ {
   public boolean equals(final Object other) {
     if (this == other)
       return true;
-    if (!(other instanceof LuaQ))
+    if (other == null)
       return false;
-    final LuaQ castOther = (LuaQ) other;
+    if (!getClass().equals(other.getClass()))
+      return false;
+    final LuaQ castOther = LuaQ.class.cast(other);
     return Objects.equals(jedisExecutor, castOther.jedisExecutor)
         && Objects.equals(qName, castOther.qName);
   }

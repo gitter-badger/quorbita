@@ -1,5 +1,5 @@
 -- Returns 1 if the result was set, or 0 if a result already exists.
--- Notifies idle published reduce queue if zero mapped results are pending.
+-- Notifies THE idle published reduce queue if zero mapped results are pending.
 
 -- KEYS:
 --  (1) publishedReduceZKey
