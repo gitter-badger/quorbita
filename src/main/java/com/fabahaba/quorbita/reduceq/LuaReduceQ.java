@@ -120,6 +120,34 @@ public class LuaReduceQ extends LuaQ implements ReduceQ {
   }
 
   @Override
+  public Long
+      publishMappedResult(final byte[] reduceId, final byte[] id, final byte[] resultPayload) {
+
+    return publishMappedResult(reduceId, defaultReduceWeightBytes, id, resultPayload);
+  }
+
+  @Override
+  public Long publishMappedResult(final byte[] reduceId, final byte[] id,
+      final byte[] resultPayload, final int numRetries) {
+
+    return publishMappedResult(reduceId, defaultReduceWeightBytes, id, resultPayload, numRetries);
+  }
+
+  @Override
+  public Long publishMappedResult(final byte[] reduceId, final byte[] reduceWeight,
+      final byte[] id, final byte[] resultPayload, final int numRetries) {
+
+    final byte[] pendingMappedSKey = Bytes.concat(pendingMappedSKeyPrefix, reduceId);
+    final byte[] mappedResultsHKey = Bytes.concat(mappedResultsHKeyPrefix, reduceId);
+    final byte[] notifyMappedResultsLKey = Bytes.concat(mappedResultsNotifyLKeyPrefix, reduceId);
+
+    return ReduceQFunctions.publishMappedResult(jedisExecutor, publishedReduceZKey,
+        claimedReduceHKey, mappedResultsHKey, pendingMappedSKey, notifyReduceLKey,
+        notifyMappedResultsLKey, claimedHKey, payloadsHKey, reduceId, reduceWeight, id,
+        resultPayload, numRetries);
+  }
+
+  @Override
   public boolean equals(final Object other) {
     if (this == other)
       return true;

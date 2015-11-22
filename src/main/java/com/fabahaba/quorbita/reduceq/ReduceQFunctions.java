@@ -73,4 +73,17 @@ public class ReduceQFunctions {
     return (Long) ReduceQScripts.PUBLISH_REDUCIBLE.eval(jedisExecutor, numRetries,
         NUM_PUB_REDUCIBLE_KEYS, params);
   }
+
+  public static Long publishMappedResult(final JedisExecutor jedisExecutor,
+      final byte[] publishedReduceZKey, final byte[] claimedReduceHKey,
+      final byte[] mappedResultsHKey, final byte[] pendingMappedSKey,
+      final byte[] notifyReduceLKey, final byte[] notifyMappedResultsLKey,
+      final byte[] claimedHKey, final byte[] payloadsHKey, final byte[] reduceId,
+      final byte[] reduceWeight, final byte[] id, final byte[] resultPayload, final int numRetries) {
+
+    return (Long) ReduceQScripts.PUBLISH_EPOCH_REDUCIBLE.eval(jedisExecutor, numRetries, 8,
+        publishedReduceZKey, claimedReduceHKey, mappedResultsHKey, pendingMappedSKey,
+        notifyReduceLKey, notifyMappedResultsLKey, claimedHKey, payloadsHKey, reduceId,
+        reduceWeight, id, resultPayload);
+  }
 }

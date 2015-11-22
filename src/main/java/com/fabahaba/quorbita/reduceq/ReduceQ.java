@@ -37,4 +37,19 @@ public interface ReduceQ extends QuorbitaQ {
 
   public Long publishReducible(final byte[] reduceId, final byte[] reduceWeight,
       final Collection<byte[]> idPayloads, final int numRetries);
+
+  default Long publishMappedResult(final byte[] reduceId, final byte[] reduceWeight,
+      final byte[] id, final byte[] resultPayload) {
+
+    return publishMappedResult(reduceId, reduceWeight, id, resultPayload, getDefaultNumRetries());
+  }
+
+  public Long publishMappedResult(final byte[] reduceId, final byte[] id,
+      final byte[] resultPayload, final int numRetries);
+
+  public Long
+      publishMappedResult(final byte[] reduceId, final byte[] id, final byte[] resultPayload);
+
+  public Long publishMappedResult(final byte[] reduceId, final byte[] reduceWeight,
+      final byte[] id, final byte[] resultPayload, final int numRetries);
 }

@@ -26,9 +26,9 @@ while true do
 
    if redis.call('zscore', KEYS[2], id) then
       idPayloadStates[j] = {id, true, false, false};
-   else if redis.call('hexists', KEYS[3], id) > 0 then
+   elseif redis.call('hexists', KEYS[3], id) > 0 then
       idPayloadStates[j] = {id, false, true, false};
-   else if redis.call('hexists', KEYS[4], id) > 0 then
+   elseif redis.call('hexists', KEYS[4], id) > 0 then
       idPayloadStates[j] = {id, false, false, true};
    else
       idPayloadStates[j] = {id, false, false, false};
