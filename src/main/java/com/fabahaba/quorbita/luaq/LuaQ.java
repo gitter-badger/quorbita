@@ -8,11 +8,11 @@ import com.google.common.collect.ImmutableList;
 import redis.clients.jedis.Response;
 import redis.clients.jedis.ScanParams;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -27,132 +27,129 @@ public class LuaQ extends BaseQ implements QuorbitaQ {
   }
 
   @Override
-  public Long publish(final String id, final byte[] payload, final int numRetries) {
-
-    return publish(id.getBytes(StandardCharsets.UTF_8), payload, numRetries);
-  }
-
-  @Override
-  public Long publish(final byte[] id, final byte[] payload, final int numRetries) {
-
-    return LuaQFunctions.publish(jedisExecutor, id, payload, publishedZKey, claimedHKey,
-        payloadsHKey, notifyLKey, numRetries);
-  }
-
-  @Override
-  public Long publish(final Collection<byte[]> idPayloads, final int numRetries) {
+  public List<Long> publish(final int numRetries, final byte[]... idPayloads) {
 
     return LuaQFunctions.publish(jedisExecutor, publishedZKey, claimedHKey, payloadsHKey,
-        notifyLKey, idPayloads, numRetries);
+        notifyLKey, numRetries, idPayloads);
   }
 
   @Override
-  public Long republish(final String id, final int numRetries) {
+  public List<Long> publish(final Collection<byte[]> idPayloads, final int numRetries) {
 
-    return republish(id.getBytes(StandardCharsets.UTF_8), numRetries);
+    return LuaQFunctions.publish(jedisExecutor, publishedZKey, claimedHKey, payloadsHKey,
+        notifyLKey, numRetries, idPayloads);
   }
 
   @Override
-  public Long republish(final byte[] id, final int numRetries) {
+  public List<Long> republish(final int numRetries, final String... ids) {
 
-    return LuaQFunctions.republish(jedisExecutor, id, publishedZKey, claimedHKey, notifyLKey,
-        numRetries);
+    return LuaQFunctions.republish(jedisExecutor, publishedZKey, claimedHKey, notifyLKey,
+        numRetries, ids);
   }
 
   @Override
-  public Long republishAs(final String id, final byte[] payload, final int numRetries) {
+  public List<Long> republish(final int numRetries, final byte[]... ids) {
 
-    return LuaQFunctions.republishAs(jedisExecutor, id.getBytes(StandardCharsets.UTF_8), payload,
-        publishedZKey, claimedHKey, notifyLKey, payloadsHKey, numRetries);
+    return LuaQFunctions.republish(jedisExecutor, publishedZKey, claimedHKey, notifyLKey,
+        numRetries, ids);
   }
 
   @Override
-  public Long republishClaimed(final byte[] claimedScore, final String id, final int numRetries) {
+  public List<Long> republishAs(final int numRetries, final byte[]... idPayloads) {
 
-    return republishClaimed(claimedScore, id.getBytes(StandardCharsets.UTF_8), numRetries);
+    return LuaQFunctions.republishAs(jedisExecutor, publishedZKey, claimedHKey, notifyLKey,
+        payloadsHKey, numRetries, idPayloads);
   }
 
   @Override
-  public Long republishClaimed(final byte[] claimedScore, final byte[] id, final int numRetries) {
+  public List<Long> republishClaimed(final byte[] claimToken, final int numRetries,
+      final String... ids) {
 
-    return LuaQFunctions.republishClaimed(jedisExecutor, claimedScore, id, publishedZKey,
-        claimedHKey, notifyLKey, numRetries);
+    return LuaQFunctions.republishClaimed(jedisExecutor, claimToken, publishedZKey, claimedHKey,
+        notifyLKey, numRetries, ids);
   }
 
   @Override
-  public Long republishClaimedAs(final byte[] claimedScore, final String id, final byte[] payload,
-      final int numRetries) {
+  public List<Long> republishClaimed(final byte[] claimToken, final int numRetries,
+      final byte[]... ids) {
 
-    return LuaQFunctions.republishClaimedAs(jedisExecutor, claimedScore,
-        id.getBytes(StandardCharsets.UTF_8), payload, publishedZKey, claimedHKey, notifyLKey,
-        payloadsHKey, numRetries);
+    return LuaQFunctions.republishClaimed(jedisExecutor, claimToken, publishedZKey, claimedHKey,
+        notifyLKey, numRetries, ids);
   }
 
   @Override
-  public Long republishDead(final String id, final int numRetries) {
+  public List<Long> republishClaimedAs(final byte[] claimToken, final int numRetries,
+      final byte[]... idPayloads) {
 
-    return republishDead(id.getBytes(StandardCharsets.UTF_8), numRetries);
+    return LuaQFunctions.republishClaimedAs(jedisExecutor, claimToken, publishedZKey, claimedHKey,
+        notifyLKey, payloadsHKey, numRetries, idPayloads);
   }
 
   @Override
-  public Long republishDead(final byte[] id, final int numRetries) {
+  public List<Long> republishDead(final int numRetries, final String... ids) {
 
-    return LuaQFunctions.republish(jedisExecutor, id, publishedZKey, deadHKey, notifyLKey,
-        numRetries);
+    return LuaQFunctions.republish(jedisExecutor, publishedZKey, deadHKey, notifyLKey, numRetries,
+        ids);
   }
 
   @Override
-  public Long republishDeadAs(final String id, final byte[] payload, final int numRetries) {
+  public List<Long> republishDead(final int numRetries, final byte[]... ids) {
 
-    return LuaQFunctions.republishAs(jedisExecutor, id.getBytes(StandardCharsets.UTF_8), payload,
-        publishedZKey, deadHKey, notifyLKey, payloadsHKey, numRetries);
+    return LuaQFunctions.republish(jedisExecutor, publishedZKey, deadHKey, notifyLKey, numRetries,
+        ids);
   }
 
   @Override
-  public Long kill(final String id, final int numRetries) {
+  public List<Long> republishDeadAs(final int numRetries, final byte[]... idPayloads) {
 
-    return LuaQFunctions.kill(jedisExecutor, id.getBytes(StandardCharsets.UTF_8), deadHKey,
-        claimedHKey, numRetries);
+    return LuaQFunctions.republishAs(jedisExecutor, publishedZKey, deadHKey, notifyLKey,
+        payloadsHKey, numRetries, idPayloads);
   }
 
   @Override
-  public Long killAs(final String id, final byte[] payload, final int numRetries) {
+  public List<Long> kill(final int numRetries, final String... ids) {
 
-    return LuaQFunctions.killAs(jedisExecutor, id.getBytes(StandardCharsets.UTF_8), payload,
-        deadHKey, claimedHKey, payloadsHKey, numRetries);
+    return LuaQFunctions.kill(jedisExecutor, deadHKey, claimedHKey, numRetries, ids);
   }
 
   @Override
-  public Long killClaimed(final byte[] claimedScore, final String id, final int numRetries) {
+  public List<Long> killAs(final int numRetries, final byte[]... idPayloads) {
 
-    return LuaQFunctions.killClaimed(jedisExecutor, claimedScore, id.getBytes(StandardCharsets.UTF_8),
-        deadHKey, claimedHKey, numRetries);
+    return LuaQFunctions.killAs(jedisExecutor, deadHKey, claimedHKey, payloadsHKey, numRetries,
+        idPayloads);
   }
 
   @Override
-  public Long killClaimedAs(final byte[] claimedScore, final String id, final byte[] payload,
-      final int numRetries) {
+  public List<Long> killClaimed(final byte[] claimToken, final int numRetries, final String... ids) {
 
-    return LuaQFunctions.killClaimedAs(jedisExecutor, claimedScore, id.getBytes(StandardCharsets.UTF_8),
-        payload, deadHKey, claimedHKey, payloadsHKey, numRetries);
+    return LuaQFunctions.killClaimed(jedisExecutor, claimToken, deadHKey, claimedHKey, numRetries,
+        ids);
   }
 
   @Override
-  public List<List<byte[]>> claim(final byte[] claimLimit) {
+  public List<Long> killClaimedAs(final byte[] claimToken, final int numRetries,
+      final byte[]... idPayloads) {
+
+    return LuaQFunctions.killClaimedAs(jedisExecutor, claimToken, deadHKey, claimedHKey,
+        payloadsHKey, numRetries, idPayloads);
+  }
+
+  @Override
+  public Optional<ClaimedIdPayloads> claim(final byte[] claimLimit) {
 
     return LuaQFunctions.nonBlockingClaim(jedisExecutor, publishedZKey, claimedHKey, payloadsHKey,
         notifyLKey, claimLimit);
   }
 
   @Override
-  public List<List<byte[]>> claim(final byte[] claimLimit, final int timeoutSeconds) {
+  public Optional<ClaimedIdPayloads> claim(final byte[] claimLimit, final int timeoutSeconds) {
 
     return LuaQFunctions.claim(jedisExecutor, publishedZKey, claimedHKey, payloadsHKey, notifyLKey,
         claimLimit, timeoutSeconds);
   }
 
   @Override
-  public void consume(final Function<List<List<byte[]>>, Boolean> idPayloadConsumer,
+  public void consume(final Function<ClaimedIdPayloads, Boolean> idPayloadConsumer,
       final byte[] claimLimit, final int maxBlockOnEmptyQSeconds) {
 
     LuaQFunctions.consume(jedisExecutor, publishedZKey, claimedHKey, payloadsHKey, notifyLKey,
@@ -160,7 +157,7 @@ public class LuaQ extends BaseQ implements QuorbitaQ {
   }
 
   @Override
-  public void consume(final Function<List<List<byte[]>>, Boolean> idPayloadConsumer,
+  public void consume(final Function<ClaimedIdPayloads, Boolean> idPayloadConsumer,
       final byte[] claimLimit) {
 
     LuaQFunctions.consume(jedisExecutor, publishedZKey, claimedHKey, payloadsHKey, notifyLKey,
@@ -168,52 +165,83 @@ public class LuaQ extends BaseQ implements QuorbitaQ {
   }
 
   @Override
-  public boolean checkin(final String id, final int numRetries) {
+  public ClaimedCheckins checkin(final int numRetries, final String... ids) {
 
-    return LuaQFunctions.checkin(jedisExecutor, claimedHKey, id.getBytes(StandardCharsets.UTF_8)) == 0;
-  }
-
-  public long removePublished(final int numRetries, final String... ids) {
-
-    return LuaQFunctions.zRemove(jedisExecutor, publishedZKey, payloadsHKey, numRetries, ids);
+    return LuaQFunctions.checkin(jedisExecutor, claimedHKey, numRetries, ids);
   }
 
   @Override
-  public long removeClaimed(final int numRetries, final String... ids) {
+  public ClaimedCheckins checkin(final int numRetries, final byte[]... ids) {
 
-    return LuaQFunctions.hRemove(jedisExecutor, claimedHKey, payloadsHKey, numRetries, ids);
+    return LuaQFunctions.checkin(jedisExecutor, claimedHKey, numRetries, ids);
   }
 
   @Override
-  public long removeClaimed(final int numRetries, final byte[]... ids) {
+  public ClaimedCheckins checkinClaimed(final byte[] claimToken, final int numRetries,
+      final String... ids) {
 
-    return LuaQFunctions.hRemove(jedisExecutor, claimedHKey, payloadsHKey, numRetries, ids);
+    return LuaQFunctions.checkinClaimed(jedisExecutor, claimToken, claimedHKey, numRetries, ids);
   }
 
   @Override
-  public long removeDead(final int numRetries, final String... ids) {
+  public ClaimedCheckins checkinClaimed(final byte[] claimToken, final int numRetries,
+      final byte[]... ids) {
 
-    return LuaQFunctions.hRemove(jedisExecutor, deadHKey, payloadsHKey, numRetries, ids);
+    return LuaQFunctions.checkinClaimed(jedisExecutor, claimToken, claimedHKey, numRetries, ids);
   }
 
   @Override
-  public long removeDead(final int numRetries, final byte[]... ids) {
+  public List<Long> remove(final int numRetries, final String... ids) {
 
-    return LuaQFunctions.hRemove(jedisExecutor, deadHKey, payloadsHKey, numRetries, ids);
+    return LuaQFunctions.remove(jedisExecutor, claimedHKey, payloadsHKey, numRetries, ids);
   }
 
   @Override
-  public long remove(final int numRetries, final String... ids) {
+  public List<Long> remove(final int numRetries, final byte[]... ids) {
 
-    return LuaQFunctions.remove(jedisExecutor, publishedZKey, claimedHKey, deadHKey, payloadsHKey,
+    return LuaQFunctions.remove(jedisExecutor, claimedHKey, payloadsHKey, numRetries, ids);
+  }
+
+  @Override
+  public List<Long> removeClaimed(final byte[] claimToken, final int numRetries,
+      final String... ids) {
+
+    return LuaQFunctions.removeClaimed(jedisExecutor, claimToken, claimedHKey, payloadsHKey,
         numRetries, ids);
   }
 
   @Override
-  public long remove(final int numRetries, final byte[]... ids) {
+  public List<Long> removeClaimed(final byte[] claimToken, final int numRetries,
+      final byte[]... ids) {
 
-    return LuaQFunctions.remove(jedisExecutor, publishedZKey, claimedHKey, deadHKey, payloadsHKey,
+    return LuaQFunctions.removeClaimed(jedisExecutor, claimToken, claimedHKey, payloadsHKey,
         numRetries, ids);
+  }
+
+  @Override
+  public List<Long> removeDead(final int numRetries, final String... ids) {
+
+    return LuaQFunctions.remove(jedisExecutor, deadHKey, payloadsHKey, numRetries, ids);
+  }
+
+  @Override
+  public List<Long> removeDead(final int numRetries, final byte[]... ids) {
+
+    return LuaQFunctions.remove(jedisExecutor, deadHKey, payloadsHKey, numRetries, ids);
+  }
+
+  @Override
+  public long removeAll(final int numRetries, final String... ids) {
+
+    return LuaQFunctions.removeAll(jedisExecutor, publishedZKey, claimedHKey, deadHKey,
+        payloadsHKey, numRetries, ids);
+  }
+
+  @Override
+  public long removeAll(final int numRetries, final byte[]... ids) {
+
+    return LuaQFunctions.removeAll(jedisExecutor, publishedZKey, claimedHKey, deadHKey,
+        payloadsHKey, numRetries, ids);
   }
 
   @Override
@@ -221,23 +249,6 @@ public class LuaQ extends BaseQ implements QuorbitaQ {
 
     LuaQFunctions.clear(jedisExecutor, numRetries, publishedZKey, claimedHKey, payloadsHKey,
         notifyLKey, deadHKey);
-  }
-
-  @Override
-  public void clearDead(final int numRetries) {
-
-    LuaQFunctions.hClearQ(jedisExecutor, deadHKey, payloadsHKey, numRetries);
-  }
-
-  public List<byte[]> removeOrphanedPayloads() {
-
-    return removeOrphanedPayloads(DEFAULT_REMOVE_ORPHAN_PAYLOADS_BATCH_SIZE);
-  }
-
-  public List<byte[]> removeOrphanedPayloads(final int batchSize) {
-
-    return LuaQFunctions.removeOrphanedPayloads(jedisExecutor, publishedZKey, claimedHKey,
-        payloadsHKey, batchSize);
   }
 
   @Override
@@ -285,7 +296,7 @@ public class LuaQ extends BaseQ implements QuorbitaQ {
   }
 
   @Override
-  public void scanClaimedIdScores(final Consumer<Entry<byte[], byte[]>> idValuesConsumer,
+  public void scanClaimedIdScores(final Consumer<List<Entry<byte[], byte[]>>> idValuesConsumer,
       final ScanParams scanParams) {
 
     LuaQFunctions.hScanIdValues(jedisExecutor, claimedHKey, scanParams, idValuesConsumer);

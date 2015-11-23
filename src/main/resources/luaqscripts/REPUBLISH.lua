@@ -1,4 +1,4 @@
--- Returns 1 if replublished or 0 if the id was no longer claimed/dead.
+-- Returns 1 if replublished, -1 if the id was no longer claimed/dead, or 0 if already published for each id.
 
 -- KEYS:
 --  (1) publishedZKey
@@ -8,18 +8,38 @@
 
 -- ARGS:
 --  (1) score
---  (2) id
---  (3) payload
+--  (2 3 ...) id payload
 
-local deleted = redis.call('hdel', KEYS[2], ARGV[2]);
-if deleted == 0 then return deleted; end
+local republished = {};
 
-redis.call('zadd', KEYS[1], 'NX', ARGV[1], ARGV[2]);
-
+local i = 2;
+local incr;
 if KEYS[4] then
-   redis.call('hset', KEYS[4], ARGV[2], ARGV[3]);
+   incr=2;
+else
+   incr=1;
 end
 
-redis.call('lpush', KEYS[3], ARGV[2]);
+local j = 1;
 
-return deleted;
+while true do
+
+   local id = ARGV[i];
+   if id == nil then return republished; end
+
+   local deleted = redis.call('hdel', KEYS[2], id);
+   if deleted == 0 then return
+      republished[j] = -1;
+   else
+      republished[j] = redis.call('zadd', KEYS[1], 'NX', ARGV[1], id);
+
+      if KEYS[4] then
+         redis.call('hset', KEYS[4], id, ARGV[i+1]);
+      end
+
+      redis.call('lpush', KEYS[3], id);
+   end
+
+   i = i + incr;
+   j = j + 1;
+end

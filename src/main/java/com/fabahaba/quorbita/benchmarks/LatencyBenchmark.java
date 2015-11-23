@@ -76,7 +76,7 @@ public class LatencyBenchmark {
       luaQ.consume(ipPayloads -> {
         final long claimedStamp = System.nanoTime();
 
-        if (ipPayloads.isEmpty()) {
+        if (ipPayloads.getIdPayloads().isEmpty()) {
           if (donePublishing.get()) {
             if (luaQ.getPublishedQSize() == 0)
               return Boolean.FALSE;
@@ -84,11 +84,11 @@ public class LatencyBenchmark {
           return Boolean.TRUE;
         }
 
-        final byte[] idBytes = ipPayloads.get(0).get(0);
+        final byte[] idBytes = ipPayloads.getIdPayloads().get(0).get(0);
         final int id = Integer.parseInt(new String(idBytes, StandardCharsets.UTF_8));
         publishClaimedStamps.get(id)[1] = claimedStamp;
 
-        luaQ.removeClaimed(idBytes);
+        luaQ.removeClaimed(ipPayloads.getClaimToken().array(), idBytes);
         return Boolean.TRUE;
       }, "1".getBytes(StandardCharsets.UTF_8));
     }

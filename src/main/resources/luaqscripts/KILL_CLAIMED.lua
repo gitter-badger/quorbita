@@ -1,4 +1,4 @@
--- Returns 1 if killed or 0 if id was no longer claimed.
+-- Returns 1 if killed, -1 if id was no longer claimed, or 0 if already dead for each id.
 
 -- KEYS:
 --  (1) deadHKey
@@ -11,14 +11,35 @@
 --  (3) id
 --  (4) payload
 
-local claimedScore = redis.call('hget', KEYS[2], ARGV[3]);
-if claimedScore == nil or claimedScore != ARGV[1] then return 0; end
+local killed = {};
 
-redis.call('hdel', KEYS[2], ARGV[3]);
-redis.call('hset', KEYS[1], ARGV[3], ARGV[2]);
-
+local i = 3;
+local incr;
 if KEYS[3] then
-   redis.call('hset', KEYS[3], ARGV[3], ARGV[4]);
+   incr=2;
+else
+   incr=1;
 end
 
-return 1;
+local j = 1;
+
+while true do
+
+   local id = ARGV[i];
+   if id == nil then return killed; end
+
+   local claimedScore = redis.call('hget', KEYS[2], id);
+   if claimedScore == nil or claimedScore != ARGV[1] then
+      killed[j] = -1;
+   else
+      redis.call('hdel', KEYS[2], ARGV[3]);
+      killed[j] = redis.call('hset', KEYS[1], id, ARGV[2]);
+
+      if KEYS[3] then
+         redis.call('hset', KEYS[3], id, ARGV[i+1]);
+      end
+   end
+
+   i = i + incr;
+   j = j + 1;
+end

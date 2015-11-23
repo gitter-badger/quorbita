@@ -18,7 +18,7 @@ for i = 1, ARGV[2], 1 do
    if id == nil then return idPayloads; end
 
    if redis.call('hsetnx', KEYS[2], id, ARGV[1]) > 0 then
-      idPayloads[i] = {id, redis.call('hget', KEYS[4], id), ARGV[1]};
+      idPayloads[i] = {id, redis.call('hget', KEYS[4], id)};
    else
       i = i - 1;
    end
