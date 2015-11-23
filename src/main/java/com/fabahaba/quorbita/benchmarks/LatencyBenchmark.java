@@ -99,9 +99,7 @@ public class LatencyBenchmark {
     run(numJobs, payloadSizeBytes, Runtime.getRuntime().availableProcessors());
   }
 
-  public void run(final int numJobs, final int payloadSizeBytes,
-
-  final int numConsumers) {
+  public void run(final int numJobs, final int payloadSizeBytes, final int numConsumers) {
 
     luaQ.clear();
 

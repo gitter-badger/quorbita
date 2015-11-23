@@ -2,7 +2,7 @@
 
 -- KEYS:
 --  (1) publishedReduceZKey
---  (2) claimedReduceHKey
+--  (2) deadReduceHKey
 --  (3) notifyReducedLKey
 --  (4) payloadsReduceHKey
 
@@ -14,13 +14,15 @@ local weight = redis.call('hget', KEYS[2], ARGV[1]);
 if weight == nil then return 0; end
 
 redis.call('hdel', KEYS[2], ARGV[1]);
-redis.call('zadd', KEYS[1], 'NX', weight, ARGV[1]);
+
+local numPending = redis.call('scard', KEYS[3]);
+redis.call('zadd', KEYS[1], 'NX', numPending, ARGV[1]);
 
 if KEYS[4] then
    redis.call('hset', KEYS[4], ARGV[1], ARGV[2]);
 end
 
-if weight == 0 then
+if numPending == 0 then
    redis.call('lpush', KEYS[3], ARGV[1]);
 end
 

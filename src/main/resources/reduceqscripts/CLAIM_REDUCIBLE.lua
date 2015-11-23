@@ -11,14 +11,12 @@
 while true do
    local idWeight = redis.call('zrange', KEYS[1], 0, 0, 'WITHSCORES');
    local id = idWeight[1];
-   if id == nil then
-      return {};
-   end
+   if id == nil then return {}; end
 
-   local claimed = redis.call('hsetnx', KEYS[2], id, idWeight[2]);
    redis.call('zrem', KEYS[1], id);
    redis.call('lpop', KEYS[4]);
-   if claimed > 0 then
+
+   if redis.call('hsetnx', KEYS[2], id, idWeight[2]) > 0 then
       return {id, redis.call('hget', KEYS[3], id)};
    end
 end

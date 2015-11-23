@@ -10,15 +10,15 @@ import java.util.Objects;
 
 public class LuaReduceQ extends LuaQ implements ReduceQ {
 
-  public static final String PUBLISHED_REDUCE_POSTFIX = ":R:PUB";
-  public static final String CLAIMED_REDUCE_POSTFIX = ":R:CLAIM";
-  public static final String PAYLOAD_REDUCE_POSTFIX = ":R:PAYLOAD";
-  public static final String NOTIFY_REDUCE_POSTFIX = ":R:NOTIFY";
-  public static final String DLQ_REDUCE_POSTFIX = ":R:DEAD";
+  private static final String REDUCE_POSTFIX_PREFIX = ":R";
+  private static final String MAPPED_POSTFIX_PREFIX = ":M";
 
-  public static final String PENDING_MAPPED_PREFIX_POSTFIX = ":R:M:PENDING:";
-  public static final String MAPPED_RESULTS_PREFIX_POSTFIX = ":R:M:RESULTS:";
-  public static final String MAPPED_RESULTS_NOTIFY_PREFIX_POSTFIX = ":R:M:NOTIFY:";
+  public static final String PENDING_MAPPED_PREFIX_POSTFIX = REDUCE_POSTFIX_PREFIX
+      + MAPPED_POSTFIX_PREFIX + ":PENDING:";
+  public static final String MAPPED_RESULTS_PREFIX_POSTFIX = REDUCE_POSTFIX_PREFIX
+      + MAPPED_POSTFIX_PREFIX + ":RESULTS:";
+  public static final String MAPPED_RESULTS_NOTIFY_PREFIX_POSTFIX = REDUCE_POSTFIX_PREFIX
+      + MAPPED_POSTFIX_PREFIX + ":NOTIFY:";
 
   protected final byte[] publishedReduceZKey;
   protected final byte[] claimedReduceHKey;
@@ -43,11 +43,16 @@ public class LuaReduceQ extends LuaQ implements ReduceQ {
 
     super(jedisExecutor, qName);
 
-    this.publishedReduceZKey = (qName + PUBLISHED_REDUCE_POSTFIX).getBytes(StandardCharsets.UTF_8);
-    this.claimedReduceHKey = (qName + CLAIMED_REDUCE_POSTFIX).getBytes(StandardCharsets.UTF_8);
-    this.payloadReduceHKey = (qName + PAYLOAD_REDUCE_POSTFIX).getBytes(StandardCharsets.UTF_8);
-    this.notifyReduceLKey = (qName + NOTIFY_REDUCE_POSTFIX).getBytes(StandardCharsets.UTF_8);
-    this.deadReduceHKey = (qName + DLQ_REDUCE_POSTFIX).getBytes(StandardCharsets.UTF_8);
+    this.publishedReduceZKey =
+        (qName + REDUCE_POSTFIX_PREFIX + PUBLISHED_POSTFIX).getBytes(StandardCharsets.UTF_8);
+    this.claimedReduceHKey =
+        (qName + REDUCE_POSTFIX_PREFIX + CLAIMED_POSTFIX).getBytes(StandardCharsets.UTF_8);
+    this.payloadReduceHKey =
+        (qName + REDUCE_POSTFIX_PREFIX + PAYLOADS_POSTFIX).getBytes(StandardCharsets.UTF_8);
+    this.notifyReduceLKey =
+        (qName + REDUCE_POSTFIX_PREFIX + NOTIFY_POSTFIX).getBytes(StandardCharsets.UTF_8);
+    this.deadReduceHKey =
+        (qName + REDUCE_POSTFIX_PREFIX + DEAD_POSTFIX).getBytes(StandardCharsets.UTF_8);
 
     this.pendingMappedSKeyPrefix =
         (qName + PENDING_MAPPED_PREFIX_POSTFIX).getBytes(StandardCharsets.UTF_8);
@@ -145,6 +150,56 @@ public class LuaReduceQ extends LuaQ implements ReduceQ {
         claimedReduceHKey, mappedResultsHKey, pendingMappedSKey, notifyReduceLKey,
         notifyMappedResultsLKey, claimedHKey, payloadsHKey, reduceId, reduceWeight, id,
         resultPayload, numRetries);
+  }
+
+  @Override
+  public Long republishReducibleAs(final byte[] reduceId, final byte[] reducePayload,
+      final int numRetries) {
+
+    return ReduceQFunctions
+        .republishReducibleAs(jedisExecutor, publishedReduceZKey, claimedReduceHKey,
+            notifyReduceLKey, payloadReduceHKey, reduceId, reducePayload, numRetries);
+  }
+
+  @Override
+  public Long republishReducible(final byte[] reduceId, final int numRetries) {
+
+    return ReduceQFunctions.republishReducible(jedisExecutor, publishedReduceZKey,
+        claimedReduceHKey, notifyReduceLKey, reduceId, numRetries);
+  }
+
+  @Override
+  public Long republishDeadReducibleAs(final byte[] reduceId, final byte[] reducePayload,
+      final int numRetries) {
+
+    return ReduceQFunctions.republishDeadReducibleAs(jedisExecutor, publishedReduceZKey,
+        deadReduceHKey, notifyReduceLKey, payloadReduceHKey, reduceId, reducePayload, numRetries);
+  }
+
+  @Override
+  public Long republishDeadReducible(final byte[] reduceId, final int numRetries) {
+
+    return ReduceQFunctions.republishDeadReducibleAs(jedisExecutor, publishedReduceZKey,
+        deadReduceHKey, notifyReduceLKey, reduceId, numRetries);
+  }
+
+  @Override
+  public Long killReducibleAs(final byte[] reduceId, final byte[] reducePayload,
+      final int numRetries) {
+
+    final byte[] pendingMappedSKey = Bytes.concat(pendingMappedSKeyPrefix, reduceId);
+
+    return ReduceQFunctions.killReducibleAs(jedisExecutor, deadReduceHKey, claimedReduceHKey,
+        pendingMappedSKey, payloadReduceHKey, reduceId, reducePayload, numRetries);
+  }
+
+  @Override
+  public Long killReducible(final byte[] reduceId, final int numRetries) {
+
+    final byte[] pendingMappedSKey = Bytes.concat(pendingMappedSKeyPrefix, reduceId);
+
+    return ReduceQFunctions.killReducible(jedisExecutor, deadReduceHKey, claimedReduceHKey,
+        pendingMappedSKey, reduceId, numRetries);
   }
 
   @Override

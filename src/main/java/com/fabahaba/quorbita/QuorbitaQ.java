@@ -167,12 +167,12 @@ public interface QuorbitaQ {
 
   public void clear(final int numRetries);
 
-  default void clearDLQ() {
+  default void clearDead() {
 
-    clearDLQ(getDefaultNumRetries());
+    clearDead(getDefaultNumRetries());
   }
 
-  public void clearDLQ(final int numRetries);
+  public void clearDead(final int numRetries);
 
   public Long getPublishedQSize();
 
@@ -180,7 +180,7 @@ public interface QuorbitaQ {
 
   public Long getQSize();
 
-  public Long getDLQSize();
+  public Long getDeadQSize();
 
   public List<Long> getQSizes();
 

@@ -3,7 +3,6 @@ package com.fabahaba.quorbita.luaq;
 import com.fabahaba.jedipus.JedisExecutor;
 import com.fabahaba.quorbita.BaseQ;
 import com.fabahaba.quorbita.QuorbitaQ;
-import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 
 import redis.clients.jedis.Response;
@@ -188,7 +187,7 @@ public class LuaQ extends BaseQ implements QuorbitaQ {
   }
 
   @Override
-  public void clearDLQ(final int numRetries) {
+  public void clearDead(final int numRetries) {
 
     LuaQFunctions.hClearQ(jedisExecutor, deadHKey, payloadsHKey, numRetries);
   }
@@ -236,7 +235,7 @@ public class LuaQ extends BaseQ implements QuorbitaQ {
   }
 
   @Override
-  public Long getDLQSize() {
+  public Long getDeadQSize() {
 
     return jedisExecutor.applyJedis(jedis -> jedis.hlen(deadHKey), getDefaultNumRetries());
   }
@@ -272,12 +271,6 @@ public class LuaQ extends BaseQ implements QuorbitaQ {
 
     LuaQFunctions.scanPayloadStates(jedisExecutor, payloadsHKey, publishedZKey, claimedHKey,
         deadHKey, idPayloadStatesConsumer);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this).add("jedisExecutor", jedisExecutor).add("qName", qName)
-        .toString();
   }
 
   @Override

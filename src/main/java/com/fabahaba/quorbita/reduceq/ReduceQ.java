@@ -52,4 +52,49 @@ public interface ReduceQ extends QuorbitaQ {
 
   public Long publishMappedResult(final byte[] reduceId, final byte[] reduceWeight,
       final byte[] id, final byte[] resultPayload, final int numRetries);
+
+  default Long republishReducibleAs(final byte[] reduceId, final byte[] reducePayload) {
+
+    return republishReducibleAs(reduceId, reducePayload, getDefaultNumRetries());
+  }
+
+  public Long republishReducibleAs(final byte[] reduceId, final byte[] reducePayload,
+      final int numRetries);
+
+  default Long republishReducible(final byte[] reduceId) {
+
+    return republishReducible(reduceId, getDefaultNumRetries());
+  }
+
+  public Long republishReducible(final byte[] reduceId, final int numRetries);
+
+  default Long republishDeadReducibleAs(final byte[] reduceId, final byte[] reducePayload) {
+
+    return republishDeadReducibleAs(reduceId, reducePayload, getDefaultNumRetries());
+  }
+
+  public Long republishDeadReducibleAs(final byte[] reduceId, final byte[] reducePayload,
+      final int numRetries);
+
+  default Long republishDeadReducible(final byte[] reduceId) {
+
+    return republishDeadReducible(reduceId, getDefaultNumRetries());
+  }
+
+  public Long republishDeadReducible(final byte[] reduceId, final int numRetries);
+
+  default Long killReducibleAs(final byte[] reduceId, final byte[] reducePayload) {
+
+    return killReducibleAs(reduceId, reducePayload, getDefaultNumRetries());
+  }
+
+  public Long killReducibleAs(final byte[] reduceId, final byte[] reducePayload,
+      final int numRetries);
+
+  default Long killReducible(final byte[] reduceId) {
+
+    return killReducible(reduceId, getDefaultNumRetries());
+  }
+
+  public Long killReducible(final byte[] reduceId, final int numRetries);
 }

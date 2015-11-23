@@ -13,9 +13,7 @@
 --  (3) payload
 
 local deleted = redis.call('hdel', KEYS[2], ARGV[2]);
-if deleted == 0 then
-   return deleted;
-end
+if deleted == 0 then return deleted; end
 
 redis.call('zadd', KEYS[1], 'NX', ARGV[1], ARGV[2]);
 

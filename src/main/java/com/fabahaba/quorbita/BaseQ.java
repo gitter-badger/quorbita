@@ -11,7 +11,7 @@ public abstract class BaseQ {
   public static final String CLAIMED_POSTFIX = ":CLAIMED";
   public static final String PAYLOADS_POSTFIX = ":PAYLOADS";
   public static final String NOTIFY_POSTFIX = ":NOTIFY";
-  public static final String DLQ_POSTFIX = ":DEAD";
+  public static final String DEAD_POSTFIX = ":DEAD";
 
   protected final JedisExecutor jedisExecutor;
 
@@ -30,7 +30,7 @@ public abstract class BaseQ {
     this.claimedHKey = (qName + CLAIMED_POSTFIX).getBytes(StandardCharsets.UTF_8);
     this.payloadsHKey = (qName + PAYLOADS_POSTFIX).getBytes(StandardCharsets.UTF_8);
     this.notifyLKey = (qName + NOTIFY_POSTFIX).getBytes(StandardCharsets.UTF_8);
-    this.deadHKey = (qName + DLQ_POSTFIX).getBytes(StandardCharsets.UTF_8);
+    this.deadHKey = (qName + DEAD_POSTFIX).getBytes(StandardCharsets.UTF_8);
   }
 
   public JedisExecutor getJedisExecutor() {
@@ -43,7 +43,6 @@ public abstract class BaseQ {
 
   @Override
   public String toString() {
-
     return MoreObjects.toStringHelper(this).add("jedisExecutor", jedisExecutor).add("qName", qName)
         .toString();
   }
