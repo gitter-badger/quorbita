@@ -337,19 +337,19 @@ public final class LuaQFunctions {
       final byte[] publishedZKey, final byte[] claimedHKey, final byte[] payloadsHKey,
       final byte[] notifyLKey, final byte[] claimLimit, final int timeoutSeconds) {
 
-    return jedisExecutor.applyJedis(jedis -> {
+    final Optional<ClaimedIdPayloads> claim =
+        jedisExecutor.applyJedis(jedis -> {
 
-      final List<byte[]> event = jedis.blpop(timeoutSeconds, notifyLKey);
+          final List<byte[]> event = jedis.blpop(timeoutSeconds, notifyLKey);
 
-      if (event == null || event.isEmpty())
-        return Optional.empty();
+          if (event == null || event.isEmpty())
+            return Optional.empty();
 
-      final Optional<ClaimedIdPayloads> claim =
-          Optional.ofNullable(LuaQFunctions.claim(jedis, publishedZKey, claimedHKey, payloadsHKey,
-              notifyLKey, claimLimit));
+          return Optional.ofNullable(LuaQFunctions.claim(jedis, publishedZKey, claimedHKey,
+              payloadsHKey, notifyLKey, claimLimit));
+        });
 
-      return claim;
-    });
+    return claim;
   }
 
   public static Optional<ClaimedIdPayloads> nonBlockingClaim(final JedisExecutor jedisExecutor,
