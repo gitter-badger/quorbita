@@ -2,11 +2,16 @@ package com.fabahaba.quorbita.reduceq;
 
 import com.fabahaba.jedipus.JedisExecutor;
 import com.fabahaba.quorbita.luaq.LuaQ;
+import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Bytes;
+
+import redis.clients.jedis.Response;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class LuaReduceQ extends LuaQ implements ReduceQ {
 
@@ -200,6 +205,59 @@ public class LuaReduceQ extends LuaQ implements ReduceQ {
 
     return ReduceQFunctions.killReducible(jedisExecutor, deadReduceHKey, claimedReduceHKey,
         pendingMappedSKey, reduceId, numRetries);
+  }
+
+  @Override
+  public List<byte[]> claimReducible() {
+
+    return ReduceQFunctions.nonBlockingClaimReducible(jedisExecutor, publishedReduceZKey,
+        claimedReduceHKey, payloadReduceHKey, notifyReduceLKey);
+  }
+
+  @Override
+  public List<byte[]> claimReducible(final int timeoutSeconds) {
+
+    return ReduceQFunctions.claimReducible(jedisExecutor, publishedReduceZKey, claimedReduceHKey,
+        payloadReduceHKey, notifyReduceLKey, timeoutSeconds);
+  }
+
+  @Override
+  public Long getPublishedReduceQSize() {
+
+    return jedisExecutor.applyJedis(jedis -> jedis.zcard(publishedReduceZKey),
+        getDefaultNumRetries());
+  }
+
+  @Override
+  public Long getClaimedReduceQSize() {
+
+    return jedisExecutor.applyJedis(jedis -> jedis.hlen(claimedReduceHKey), getDefaultNumRetries());
+  }
+
+  @Override
+  public Long getReduceQSize() {
+
+    return jedisExecutor
+        .applyPipeline(
+            pipeline -> ImmutableList.of(pipeline.zcard(publishedReduceZKey),
+                pipeline.hlen(claimedReduceHKey)), getDefaultNumRetries()).stream()
+        .mapToLong(Response::get).sum();
+  }
+
+  @Override
+  public Long getDeadReduceQSize() {
+
+    return jedisExecutor.applyJedis(jedis -> jedis.hlen(deadReduceHKey), getDefaultNumRetries());
+  }
+
+  @Override
+  public List<Long> getReduceQSizes() {
+
+    return jedisExecutor
+        .applyPipeline(
+            pipeline -> ImmutableList.of(pipeline.zcard(publishedReduceZKey),
+                pipeline.hlen(claimedReduceHKey), pipeline.hlen(deadReduceHKey)),
+            getDefaultNumRetries()).stream().map(Response::get).collect(Collectors.toList());
   }
 
   @Override

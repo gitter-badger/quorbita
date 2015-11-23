@@ -10,8 +10,7 @@
 --  (1) reduceId
 --  (2) reducePayload
 
-local weight = redis.call('hget', KEYS[2], ARGV[1]);
-if weight == nil then return 0; end
+if redis.call('hget', KEYS[2], ARGV[1]) == nil then return 0; end
 
 redis.call('hdel', KEYS[2], ARGV[1]);
 

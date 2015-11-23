@@ -1,8 +1,8 @@
 package com.fabahaba.quorbita.reduceq;
 
 import com.fabahaba.jedipus.JedisExecutor;
-import com.fabahaba.quorbita.LuaScript;
-import com.fabahaba.quorbita.LuaScriptData;
+import com.fabahaba.quorbita.lua.LuaScript;
+import com.fabahaba.quorbita.lua.LuaScriptData;
 import com.google.common.base.MoreObjects;
 
 import redis.clients.jedis.Jedis;

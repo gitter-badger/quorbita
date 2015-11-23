@@ -1,4 +1,4 @@
-package com.fabahaba.quorbita;
+package com.fabahaba.quorbita.lua;
 
 import com.fabahaba.jedipus.JedisExecutor;
 

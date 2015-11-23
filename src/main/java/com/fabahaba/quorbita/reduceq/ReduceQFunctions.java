@@ -2,8 +2,12 @@ package com.fabahaba.quorbita.reduceq;
 
 import com.fabahaba.jedipus.JedisExecutor;
 import com.fabahaba.quorbita.luaq.LuaQFunctions;
+import com.google.common.collect.ImmutableList;
+
+import redis.clients.jedis.Jedis;
 
 import java.util.Collection;
+import java.util.List;
 
 public class ReduceQFunctions {
 
@@ -106,9 +110,9 @@ public class ReduceQFunctions {
   }
 
   public static Long republishDeadReducibleAs(final JedisExecutor jedisExecutor,
-      final byte[] publishedReduceZKey, final byte[] deadReduceHKey,
-      final byte[] notifyReduceLKey, final byte[] payloadReduceHKey, final byte[] reduceId,
-      final byte[] reducePayload, final int numRetries) {
+      final byte[] publishedReduceZKey, final byte[] deadReduceHKey, final byte[] notifyReduceLKey,
+      final byte[] payloadReduceHKey, final byte[] reduceId, final byte[] reducePayload,
+      final int numRetries) {
 
     return (Long) ReduceQScripts.REPUBLISH_DEAD_REDUCIBLE.eval(jedisExecutor, numRetries, 4,
         publishedReduceZKey, deadReduceHKey, notifyReduceLKey, payloadReduceHKey, reduceId,
@@ -116,8 +120,8 @@ public class ReduceQFunctions {
   }
 
   public static Long republishDeadReducibleAs(final JedisExecutor jedisExecutor,
-      final byte[] publishedReduceZKey, final byte[] deadReduceHKey,
-      final byte[] notifyReduceLKey, final byte[] reduceId, final int numRetries) {
+      final byte[] publishedReduceZKey, final byte[] deadReduceHKey, final byte[] notifyReduceLKey,
+      final byte[] reduceId, final int numRetries) {
 
     return (Long) ReduceQScripts.REPUBLISH_DEAD_REDUCIBLE.eval(jedisExecutor, numRetries, 3,
         publishedReduceZKey, deadReduceHKey, notifyReduceLKey, reduceId);
@@ -138,5 +142,52 @@ public class ReduceQFunctions {
 
     return (Long) ReduceQScripts.KILL_REDUCIBLE.eval(jedisExecutor, numRetries, 3, deadReduceHKey,
         claimedReduceHKey, pendingMappedSKey, reduceId);
+  }
+
+  public static List<byte[]> claimReducible(final JedisExecutor jedisExecutor,
+      final byte[] publishedReduceZKey, final byte[] claimedReduceHKey,
+      final byte[] payloadReduceHKey, final byte[] notifyReduceLKey, final int timeoutSeconds) {
+
+    final List<byte[]> nonBlockingGet =
+        ReduceQFunctions.nonBlockingClaimReducible(jedisExecutor, publishedReduceZKey,
+            claimedReduceHKey, payloadReduceHKey, notifyReduceLKey);
+
+    if (!nonBlockingGet.isEmpty())
+      return nonBlockingGet;
+
+    return ReduceQFunctions.blockingClaimReducible(jedisExecutor, publishedReduceZKey,
+        claimedReduceHKey, payloadReduceHKey, notifyReduceLKey, timeoutSeconds);
+  }
+
+  public static List<byte[]> blockingClaimReducible(final JedisExecutor jedisExecutor,
+      final byte[] publishedReduceZKey, final byte[] claimedReduceHKey,
+      final byte[] payloadReduceHKey, final byte[] notifyReduceLKey, final int timeoutSeconds) {
+
+    return jedisExecutor.applyJedis(jedis -> {
+
+      final List<byte[]> event = jedis.blpop(timeoutSeconds, notifyReduceLKey);
+
+      return event == null || event.isEmpty() ? ImmutableList.<byte[]>of() : ReduceQFunctions
+          .claimReducible(jedis, publishedReduceZKey, claimedReduceHKey, payloadReduceHKey,
+              notifyReduceLKey);
+    });
+  }
+
+  public static List<byte[]> nonBlockingClaimReducible(final JedisExecutor jedisExecutor,
+      final byte[] publishedReduceZKey, final byte[] claimedReduceHKey,
+      final byte[] payloadReduceHKey, final byte[] notifyReduceLKey) {
+
+    return jedisExecutor.applyJedis(jedis -> ReduceQFunctions.claimReducible(jedis,
+        publishedReduceZKey, claimedReduceHKey, payloadReduceHKey, notifyReduceLKey));
+  }
+
+  @SuppressWarnings("unchecked")
+  private static List<byte[]>
+      claimReducible(final Jedis jedis, final byte[] publishedReduceZKey,
+          final byte[] claimedReduceHKey, final byte[] payloadReduceHKey,
+          final byte[] notifyReduceLKey) {
+
+    return (List<byte[]>) ReduceQScripts.CLAIM_REDUCIBLE.eval(jedis, 4, publishedReduceZKey,
+        claimedReduceHKey, payloadReduceHKey, notifyReduceLKey);
   }
 }

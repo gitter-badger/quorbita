@@ -103,17 +103,13 @@ public final class LuaQFunctions {
       final byte[] publishedZKey, final byte[] claimedHKey, final byte[] payloadsHKey,
       final byte[] notifyLKey, final byte[] claimLimit, final int timeoutSeconds) {
 
-    final List<List<byte[]>> result =
-        jedisExecutor.applyJedis(jedis -> {
+    return jedisExecutor.applyJedis(jedis -> {
 
-          final List<byte[]> event = jedis.blpop(timeoutSeconds, notifyLKey);
+      final List<byte[]> event = jedis.blpop(timeoutSeconds, notifyLKey);
 
-          return event == null || event.isEmpty() ? ImmutableList.<List<byte[]>>of()
-              : LuaQFunctions.claim(jedis, publishedZKey, claimedHKey, payloadsHKey, notifyLKey,
-                  claimLimit);
-        });
-
-    return result;
+      return event == null || event.isEmpty() ? ImmutableList.<List<byte[]>>of() : LuaQFunctions
+          .claim(jedis, publishedZKey, claimedHKey, payloadsHKey, notifyLKey, claimLimit);
+    });
   }
 
   public static List<List<byte[]>> nonBlockingClaim(final JedisExecutor jedisExecutor,

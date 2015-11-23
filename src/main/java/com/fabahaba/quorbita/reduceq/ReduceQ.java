@@ -3,6 +3,7 @@ package com.fabahaba.quorbita.reduceq;
 import com.fabahaba.quorbita.QuorbitaQ;
 
 import java.util.Collection;
+import java.util.List;
 
 public interface ReduceQ extends QuorbitaQ {
 
@@ -97,4 +98,18 @@ public interface ReduceQ extends QuorbitaQ {
   }
 
   public Long killReducible(final byte[] reduceId, final int numRetries);
+
+  public List<byte[]> claimReducible();
+
+  public List<byte[]> claimReducible(final int timeoutSeconds);
+
+  public Long getPublishedReduceQSize();
+
+  public Long getClaimedReduceQSize();
+
+  public Long getReduceQSize();
+
+  public Long getDeadReduceQSize();
+
+  public List<Long> getReduceQSizes();
 }
