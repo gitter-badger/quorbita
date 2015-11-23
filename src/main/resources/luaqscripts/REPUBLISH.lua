@@ -28,7 +28,7 @@ while true do
    if id == nil then return republished; end
 
    local deleted = redis.call('hdel', KEYS[2], id);
-   if deleted == 0 then return
+   if deleted == 0 then
       republished[j] = -1;
    else
       republished[j] = redis.call('zadd', KEYS[1], 'NX', ARGV[1], id);

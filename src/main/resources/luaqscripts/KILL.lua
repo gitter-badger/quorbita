@@ -7,8 +7,7 @@
 
 -- ARGS:
 --  (1) score
---  (2) id
---  (3) payload
+--  (2 3 ...) id payload
 
 
 local killed = {};
