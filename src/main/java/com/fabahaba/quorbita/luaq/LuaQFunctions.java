@@ -341,9 +341,14 @@ public final class LuaQFunctions {
 
       final List<byte[]> event = jedis.blpop(timeoutSeconds, notifyLKey);
 
-      return event == null || event.isEmpty() ? Optional.empty() : Optional
-          .ofNullable(LuaQFunctions.claim(jedis, publishedZKey, claimedHKey, payloadsHKey,
+      if (event == null || event.isEmpty())
+        return Optional.empty();
+
+      final Optional<ClaimedIdPayloads> claim =
+          Optional.ofNullable(LuaQFunctions.claim(jedis, publishedZKey, claimedHKey, payloadsHKey,
               notifyLKey, claimLimit));
+
+      return claim;
     });
   }
 
