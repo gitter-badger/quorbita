@@ -18,7 +18,7 @@ while true do
    if id == nil then return removed; end
 
    local claimedScore = redis.call('hget', KEYS[1], id);
-   if claimedScore == nil or claimedScore != ARGV[1] then
+   if claimedScore == nil or claimedScore ~= ARGV[1] then
       removed[i] = 0;
    else
       redis.call('hdel', KEYS[1], id);

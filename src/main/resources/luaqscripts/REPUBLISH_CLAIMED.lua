@@ -29,7 +29,7 @@ while true do
    if id == nil then return republished; end
 
    local claimedScore = redis.call('hget', KEYS[2], id);
-   if claimedScore == nil or claimedScore != ARGV[1] then
+   if claimedScore == nil or claimedScore ~= ARGV[1] then
       republished[j] = -1;
    else
       redis.call('hdel', KEYS[2], id);

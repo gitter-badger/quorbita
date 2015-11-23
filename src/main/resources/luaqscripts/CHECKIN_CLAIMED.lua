@@ -18,7 +18,7 @@ while true do
    if id == nil then return checkins; end
 
    local claimedScore = redis.call('hget', KEYS[1], id);
-   if claimedScore == nil or claimedScore != ARGV[1] then
+   if claimedScore == nil or claimedScore ~= ARGV[1] then
       checkins[i] = 0;
    else
       checkins[i] = redis.call('hset', KEYS[1], id, ARGV[2]);

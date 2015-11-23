@@ -13,13 +13,13 @@ final QuorbitaQ quorbitaLuaQ = new LuaQ(jedisExecutor, qName);
 
 quorbitaLuaQ.clear();
 
-quorbitaLuaQ.publish("ID-1", "PAYLOAD-1".getBytes(StandardCharsets.UTF_8));
+quorbitaLuaQ.publish("ID-1".getBytes(StandardCharsets.UTF_8),
+    "PAYLOAD-1".getBytes(StandardCharsets.UTF_8));
 
-final List<byte[]> idPayloads = ImmutableList.of(
-      "ID-2".getBytes(StandardCharsets.UTF_8),
-      "PAYLOAD-2".getBytes(StandardCharsets.UTF_8),
-      "ID-3".getBytes(StandardCharsets.UTF_8),
-      "PAYLOAD-3".getBytes(StandardCharsets.UTF_8));
+final List<byte[]> idPayloads =
+    ImmutableList.of("ID-2".getBytes(StandardCharsets.UTF_8),
+        "PAYLOAD-2".getBytes(StandardCharsets.UTF_8), "ID-3".getBytes(StandardCharsets.UTF_8),
+        "PAYLOAD-3".getBytes(StandardCharsets.UTF_8));
 
 quorbitaLuaQ.publish(idPayloads);
 
@@ -29,16 +29,20 @@ final int blockingClaimTimeoutSeconds = 3;
 // Claim at most 10 id payload pairs.
 final byte[] claimLimit = "10".getBytes(StandardCharsets.UTF_8);
 
-for (final List<byte[]> idPayload : quorbitaLuaQ.claim(claimLimit, blockingClaimTimeoutSeconds)) {
+quorbitaLuaQ.claim(claimLimit, blockingClaimTimeoutSeconds).ifPresent(claimedIdPayloads -> {
+   
+  for (final List<byte[]> idPayload : claimedIdPayloads.getIdPayloads()) {
 
-  final String id = new String(idPayload.get(0), StandardCharsets.UTF_8);
-  final String payload = new String(idPayload.get(1), StandardCharsets.UTF_8);
+    final byte[] idBytes = idPayload.get(0);
+    final String id = new String(idBytes, StandardCharsets.UTF_8);
+    final String payload = new String(idPayload.get(1), StandardCharsets.UTF_8);
 
-  System.out.printf("Claimed message with id '%s' and payload '%s'.%n", id, payload);
+    System.out.printf("Claimed message with id '%s' and payload '%s'.%n", id, payload);
 
-  quorbitaLuaQ.removeClaimed(id);
-  // quorbitaLuaQ.checkin(id)
-}
+    quorbitaLuaQ.removeClaimed(claimedIdPayloads.getClaimToken().array(), idBytes);
+    // quorbitaLuaQ.checkin(id)
+  }
+});
 ```
 
 ###Benchmarking

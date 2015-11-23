@@ -20,15 +20,13 @@ while true do
    if id == nil then return published; end
 
    if redis.call('hexists', KEYS[2], id) == 0 then
-
-      local published = redis.call('zadd', KEYS[1], 'NX', ARGV[1], id);
-
-      if published > 0 then
+      if redis.call('zadd', KEYS[1], 'NX', ARGV[1], id) > 0 then
          redis.call('hsetnx', KEYS[3], id, ARGV[i+1]);
          redis.call('lpush', KEYS[4], id);
-      end
-
-      published[j] = published;
+         published[j] = 1;
+      else
+         published[j] = 0;
+      end   
    else
       published[j] = -1;
    end
