@@ -67,6 +67,28 @@ public class LuaQ extends BaseQ implements QuorbitaQ {
   }
 
   @Override
+  public Long republishClaimed(final byte[] claimedScore, final String id, final int numRetries) {
+
+    return republishClaimed(claimedScore, id.getBytes(StandardCharsets.UTF_8), numRetries);
+  }
+
+  @Override
+  public Long republishClaimed(final byte[] claimedScore, final byte[] id, final int numRetries) {
+
+    return LuaQFunctions.republishClaimed(jedisExecutor, claimedScore, id, publishedZKey,
+        claimedHKey, notifyLKey, numRetries);
+  }
+
+  @Override
+  public Long republishClaimedAs(final byte[] claimedScore, final String id, final byte[] payload,
+      final int numRetries) {
+
+    return LuaQFunctions.republishClaimedAs(jedisExecutor, claimedScore,
+        id.getBytes(StandardCharsets.UTF_8), payload, publishedZKey, claimedHKey, notifyLKey,
+        payloadsHKey, numRetries);
+  }
+
+  @Override
   public Long republishDead(final String id, final int numRetries) {
 
     return republishDead(id.getBytes(StandardCharsets.UTF_8), numRetries);
@@ -98,6 +120,21 @@ public class LuaQ extends BaseQ implements QuorbitaQ {
 
     return LuaQFunctions.killAs(jedisExecutor, id.getBytes(StandardCharsets.UTF_8), payload,
         deadHKey, claimedHKey, payloadsHKey, numRetries);
+  }
+
+  @Override
+  public Long killClaimed(final byte[] claimedScore, final String id, final int numRetries) {
+
+    return LuaQFunctions.killClaimed(jedisExecutor, claimedScore, id.getBytes(StandardCharsets.UTF_8),
+        deadHKey, claimedHKey, numRetries);
+  }
+
+  @Override
+  public Long killClaimedAs(final byte[] claimedScore, final String id, final byte[] payload,
+      final int numRetries) {
+
+    return LuaQFunctions.killClaimedAs(jedisExecutor, claimedScore, id.getBytes(StandardCharsets.UTF_8),
+        payload, deadHKey, claimedHKey, payloadsHKey, numRetries);
   }
 
   @Override

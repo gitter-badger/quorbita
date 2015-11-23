@@ -66,6 +66,29 @@ public interface QuorbitaQ {
 
   public Long republishAs(final String id, final byte[] payload, final int numRetries);
 
+  default Long republishClaimed(final byte[] claimedScore, final byte[] id) {
+
+    return republishClaimed(claimedScore, id, getDefaultNumRetries());
+  }
+
+  public Long republishClaimed(final byte[] claimedScore, final byte[] id, final int numRetries);
+
+  default Long republishClaimed(final byte[] claimedScore, final String id) {
+
+    return republishClaimed(claimedScore, id, getDefaultNumRetries());
+  }
+
+  public Long republishClaimed(final byte[] claimedScore, final String id, final int numRetries);
+
+  default Long republishClaimedAs(final byte[] claimedScore, final String id, final byte[] payload) {
+
+    return republishClaimedAs(claimedScore, id, payload, getDefaultNumRetries());
+  }
+
+  public Long republishClaimedAs(final byte[] claimedScore, final String id, final byte[] payload,
+      final int numRetries);
+
+
   default Long republishDead(final byte[] id) {
 
     return republishDead(id, getDefaultNumRetries());
@@ -100,6 +123,21 @@ public interface QuorbitaQ {
   }
 
   public Long killAs(final String id, final byte[] payload, final int numRetries);
+
+  default Long killClaimed(final byte[] claimedScore, final String id) {
+
+    return killClaimed(claimedScore, id, getDefaultNumRetries());
+  }
+
+  public Long killClaimed(final byte[] claimedScore, final String id, final int numRetries);
+
+  default Long killClaimedAs(final byte[] claimedScore, final String id, final byte[] payload) {
+
+    return killClaimedAs(claimedScore, id, payload, getDefaultNumRetries());
+  }
+
+  public Long killClaimedAs(final byte[] claimedScore, final String id, final byte[] payload,
+      final int numRetries);
 
   public List<List<byte[]>> claim(final byte[] claimLimit);
 

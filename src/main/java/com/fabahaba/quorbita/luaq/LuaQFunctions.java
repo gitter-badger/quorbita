@@ -61,12 +61,29 @@ public final class LuaQFunctions {
         notifyLKey, payloadsHKey, LuaQFunctions.getEpochMillisBytes(), id, payload);
   }
 
+  public static Long republishClaimedAs(final JedisExecutor jedisExecutor, final byte[] claimedScore,
+      final byte[] id, final byte[] payload, final byte[] publishedZKey, final byte[] hKey,
+      final byte[] notifyLKey, final byte[] payloadsHKey, final int numRetries) {
+
+    return (Long) LuaQScripts.REPUBLISH_CLAIMED.eval(jedisExecutor, numRetries, 4, publishedZKey,
+        hKey, notifyLKey, payloadsHKey, claimedScore, LuaQFunctions.getEpochMillisBytes(), id,
+        payload);
+  }
+
   public static Long republish(final JedisExecutor jedisExecutor, final byte[] id,
       final byte[] publishedZKey, final byte[] claimedHKey, final byte[] notifyLKey,
       final int numRetries) {
 
     return (Long) LuaQScripts.REPUBLISH.eval(jedisExecutor, numRetries, 3, publishedZKey,
         claimedHKey, notifyLKey, LuaQFunctions.getEpochMillisBytes(), id);
+  }
+
+  public static Long republishClaimed(final JedisExecutor jedisExecutor, final byte[] claimedScore,
+      final byte[] id, final byte[] publishedZKey, final byte[] claimedHKey,
+      final byte[] notifyLKey, final int numRetries) {
+
+    return (Long) LuaQScripts.REPUBLISH_CLAIMED.eval(jedisExecutor, numRetries, 3, publishedZKey,
+        claimedHKey, notifyLKey, claimedScore, LuaQFunctions.getEpochMillisBytes(), id);
   }
 
   public static Long killAs(final JedisExecutor jedisExecutor, final byte[] id,
@@ -77,11 +94,26 @@ public final class LuaQFunctions {
         payloadsHKey, LuaQFunctions.getEpochMillisBytes(), id, payload);
   }
 
+  public static Long killClaimedAs(final JedisExecutor jedisExecutor, final byte[] claimedScore,
+      final byte[] id, final byte[] payload, final byte[] deadHKey, final byte[] claimedHKey,
+      final byte[] payloadsHKey, final int numRetries) {
+
+    return (Long) LuaQScripts.KILL_CLAIMED.eval(jedisExecutor, numRetries, 3, deadHKey,
+        claimedHKey, payloadsHKey, claimedScore, LuaQFunctions.getEpochMillisBytes(), id, payload);
+  }
+
   public static Long kill(final JedisExecutor jedisExecutor, final byte[] id,
       final byte[] deadHKey, final byte[] claimedHKey, final int numRetries) {
 
     return (Long) LuaQScripts.KILL.eval(jedisExecutor, numRetries, 2, deadHKey, claimedHKey,
         LuaQFunctions.getEpochMillisBytes(), id);
+  }
+
+  public static Long killClaimed(final JedisExecutor jedisExecutor, final byte[] claimedScore,
+      final byte[] id, final byte[] deadHKey, final byte[] claimedHKey, final int numRetries) {
+
+    return (Long) LuaQScripts.KILL_CLAIMED.eval(jedisExecutor, numRetries, 2, deadHKey,
+        claimedHKey, claimedScore, LuaQFunctions.getEpochMillisBytes(), id);
   }
 
   public static List<List<byte[]>> claim(final JedisExecutor jedisExecutor,

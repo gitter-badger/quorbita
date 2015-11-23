@@ -16,7 +16,9 @@ public enum LuaQScripts implements LuaScript {
   CLAIM,
   PUBLISH,
   REPUBLISH,
+  REPUBLISH_CLAIMED,
   KILL,
+  KILL_CLAIMED,
   SCAN_PAYLOADS,
   SCAN_PAYLOAD_STATES;
 
