@@ -10,6 +10,7 @@
 local checkins = {};
 
 local i = 2;
+local j = 1;
 
 while true do
 
@@ -17,10 +18,11 @@ while true do
    if id == nil then return checkins; end
 
    if redis.call('hexists', KEYS[1], id) == 0 then
-      checkins[i] = 0;
+      checkins[j] = 0;
    else
-      checkins[i] = redis.call('hset', KEYS[1], id, ARGV[1]);
+      checkins[j] = redis.call('hset', KEYS[1], id, ARGV[1]);
    end
 
    i = i + 1;
+   j = j + 1;
 end

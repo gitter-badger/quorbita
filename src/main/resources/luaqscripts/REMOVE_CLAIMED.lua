@@ -11,6 +11,7 @@
 local removed = {};
 
 local i = 2;
+local j = 1;
 
 while true do
 
@@ -19,12 +20,13 @@ while true do
 
    local claimedScore = redis.call('hget', KEYS[1], id);
    if claimedScore == nil or claimedScore ~= ARGV[1] then
-      removed[i] = 0;
+      removed[j] = 0;
    else
       redis.call('hdel', KEYS[1], id);
       redis.call('hdel', KEYS[2], id);
-      removed[i] = 1;
+      removed[j] = 1;
    end
 
    i = i + 1;
+   j = j + 1;
 end

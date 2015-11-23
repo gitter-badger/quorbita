@@ -11,6 +11,7 @@
 local checkins = {};
 
 local i = 3;
+local j = 1;
 
 while true do
 
@@ -19,10 +20,11 @@ while true do
 
    local claimedScore = redis.call('hget', KEYS[1], id);
    if claimedScore == nil or claimedScore ~= ARGV[1] then
-      checkins[i] = 0;
+      checkins[j] = 0;
    else
-      checkins[i] = redis.call('hset', KEYS[1], id, ARGV[2]);
+      checkins[j] = redis.call('hset', KEYS[1], id, ARGV[2]);
    end
 
    i = i + 1;
+   j = j + 1;
 end
