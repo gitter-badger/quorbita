@@ -338,16 +338,16 @@ public final class LuaQFunctions {
       final byte[] notifyLKey, final byte[] claimLimit, final int timeoutSeconds) {
 
     final Optional<ClaimedIdPayloads> claim =
-        jedisExecutor.applyJedis(jedis -> {
+        Optional.ofNullable(jedisExecutor.applyJedis(jedis -> {
 
           final List<byte[]> event = jedis.blpop(timeoutSeconds, notifyLKey);
 
           if (event == null || event.isEmpty())
-            return Optional.empty();
+            return null;
 
-          return Optional.ofNullable(LuaQFunctions.claim(jedis, publishedZKey, claimedHKey,
-              payloadsHKey, notifyLKey, claimLimit));
-        });
+          return LuaQFunctions.claim(jedis, publishedZKey, claimedHKey, payloadsHKey, notifyLKey,
+              claimLimit);
+        }));
 
     return claim;
   }
