@@ -520,7 +520,7 @@ public final class LuaQFunctions {
     return LuaQFunctions.getEpochMillisString().getBytes(StandardCharsets.UTF_8);
   }
 
-  public static byte[] longToBytes(final long num) {
+  public static byte[] numToBytes(final long num) {
 
     return String.valueOf(num).getBytes(StandardCharsets.UTF_8);
   }

@@ -40,7 +40,7 @@ public interface QuorbitaQ {
 
   default List<Long> publish(final long inversePriority, final byte[]... idPayloads) {
 
-    return publish(LuaQFunctions.longToBytes(inversePriority), getDefaultNumRetries(), idPayloads);
+    return publish(LuaQFunctions.numToBytes(inversePriority), getDefaultNumRetries(), idPayloads);
   }
 
   default List<Long> publish(final int numRetries, final byte[]... idPayloads) {
@@ -76,7 +76,7 @@ public interface QuorbitaQ {
 
   default List<Long> republish(final long inversePriority, final byte[]... ids) {
 
-    return republish(LuaQFunctions.longToBytes(inversePriority), getDefaultNumRetries(), ids);
+    return republish(LuaQFunctions.numToBytes(inversePriority), getDefaultNumRetries(), ids);
   }
 
   default List<Long> republish(final int numRetries, final byte[]... ids) {
@@ -112,7 +112,7 @@ public interface QuorbitaQ {
 
   default List<Long> republishAs(final long inversePriority, final byte[]... idPayloads) {
 
-    return republishAs(LuaQFunctions.longToBytes(inversePriority), getDefaultNumRetries(),
+    return republishAs(LuaQFunctions.numToBytes(inversePriority), getDefaultNumRetries(),
         idPayloads);
   }
 
@@ -192,7 +192,7 @@ public interface QuorbitaQ {
 
   default List<Long> republishDead(final long inversePriority, final byte[]... ids) {
 
-    return republishDead(LuaQFunctions.longToBytes(inversePriority), getDefaultNumRetries(), ids);
+    return republishDead(LuaQFunctions.numToBytes(inversePriority), getDefaultNumRetries(), ids);
   }
 
   default List<Long> republishDead(final int numRetries, final byte[]... ids) {
@@ -228,7 +228,7 @@ public interface QuorbitaQ {
 
   default List<Long> republishDeadAs(final long inversePriority, final byte[]... idPayloads) {
 
-    return republishDeadAs(LuaQFunctions.longToBytes(inversePriority), getDefaultNumRetries(),
+    return republishDeadAs(LuaQFunctions.numToBytes(inversePriority), getDefaultNumRetries(),
         idPayloads);
   }
 

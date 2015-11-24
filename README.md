@@ -40,7 +40,7 @@ quorbitaLuaQ.publish(idPayloads);
 final int blockingClaimTimeoutSeconds = 3;
 
 // Claim at most 10 id payload pairs.
-final byte[] claimLimit = "10".getBytes(StandardCharsets.UTF_8);
+final byte[] claimLimit = LuaQFunctions.numToBytes(10);
 
 quorbitaLuaQ.claim(claimLimit, blockingClaimTimeoutSeconds).ifPresent(claimedIdPayloads -> {
   for (final List<byte[]> idPayload : claimedIdPayloads.getIdPayloads()) {
@@ -52,7 +52,7 @@ quorbitaLuaQ.claim(claimLimit, blockingClaimTimeoutSeconds).ifPresent(claimedIdP
     System.out.printf("Claimed message with id '%s' and payload '%s'.%n", id, payload);
 
     quorbitaLuaQ.removeClaimed(claimedIdPayloads.getClaimStamp(), idBytes);
-    // quorbitaLuaQ.checkin(id)
+    // quorbitaLuaQ.checkinClaimed(claimedIdPayloads.getClaimStamp(), idBytes);
   }
 });
 ```
