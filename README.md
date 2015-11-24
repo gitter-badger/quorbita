@@ -4,7 +4,7 @@ Quorbita is a Java 8 client library that turns Redis into a reliable message bro
 * Priority Queues.  The default implementation uses timestamps on publish.  The lowest score will be claimed first.
 * Reliably claim messages and refresh claim timestamps for long running tasks with check-ins.
 * Blocking claim methods.
-* Optional claim-stamps to prevent concurrent client bugs during republishing, checking in, removing or killing.
+* Claim timestamps may optionally serve as tokens to prevent concurrent client bugs during republishing, checking in, removing or killing.
 * De-duping messages if they are already claimed or published.
 * Killing messages (Dead Letter Queue).
 * Methods for scanning claimed or dead messages for republishing or killing.

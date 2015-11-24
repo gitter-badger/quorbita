@@ -36,7 +36,7 @@ public final class LuaQFunctions {
     params[1] = claimedHKey;
     params[2] = payloadsHKey;
     params[3] = notifyLKey;
-    params[4] = publishedZKey;
+    params[4] = inversePriority;
 
     for (final byte[] idOrPayload : idPayloads) {
       params[i++] = idOrPayload;
