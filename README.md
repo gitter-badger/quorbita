@@ -1,6 +1,6 @@
 #quorbita [![Build Status](https://travis-ci.org/jamespedwards42/quorbita.svg)](https://travis-ci.org/jamespedwards42/quorbita) [![JCenter](https://api.bintray.com/packages/jamespedwards42/libs/quorbita/images/download.svg) ](https://bintray.com/jamespedwards42/libs/quorbita/_latestVersion) [![License](http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat) ](http://www.apache.org/licenses/LICENSE-2.0)
 
->Quorbita is a Java 8 client library that turns Redis into a reliable message broker that supports:
+Quorbita is a Java 8 client library that turns Redis into a reliable message broker that supports:
 * Priority Queues.  The default implementation uses timestamps on publish.  The lowest score will be claimed first.
 * Reliably claim messages and refresh claim timestamps for long running tasks with check-ins.
 * Optional claim tokens to prevent client bugs during republishing, checking in, removing or killing.
