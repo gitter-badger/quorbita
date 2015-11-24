@@ -5,7 +5,7 @@
 --  (2) payloadsHKey
 
 -- ARGS:
---  (1) claimedScore
+--  (1) claimStamp
 --  (2 ...) id
 
 local removed = {};
@@ -18,8 +18,8 @@ while true do
    local id = ARGV[i];
    if id == nil then return removed; end
 
-   local claimedScore = redis.call('hget', KEYS[1], id);
-   if claimedScore == nil or claimedScore ~= ARGV[1] then
+   local claimStamp = redis.call('hget', KEYS[1], id);
+   if claimStamp == nil or claimStamp ~= ARGV[1] then
       removed[j] = 0;
    else
       redis.call('hdel', KEYS[1], id);

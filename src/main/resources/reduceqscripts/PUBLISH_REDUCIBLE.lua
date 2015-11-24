@@ -17,9 +17,11 @@
 --  (4 5 ...) id payload
 
 
-local numPublished = 0;
+local published = {};
 local weight = 0;
+
 local i = 4;
+local j = 1;
 
 while true do
 
@@ -32,13 +34,20 @@ while true do
             redis.call('hsetnx', KEYS[3], id, ARGV[i+1]);
             redis.call('sadd', KEYS[5], id);
             redis.call('lpush', KEYS[4], id);
-            numPublished = numPublished + 1;
+            published[j] = 1;
             weight = weight + ARGV[2]
+         else
+            published[j] = 0;
          end
+      else
+         published[j] = -2;
       end
+   else
+      published[j] = -1;
    end
 
    i = i + 2;
+   j = j + 1;
 end
 
 if redis.call('hexists', KEYS[8], ARGV[3]) == 0 then
@@ -47,4 +56,4 @@ else
    redis.call('hincrby', KEYS[8], ARGV[3], weight);
 end
 
-return numPublished;
+return published;

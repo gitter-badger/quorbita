@@ -5,17 +5,17 @@ import java.util.List;
 
 public class ClaimedIdPayloads {
 
-  private final ByteBuffer claimToken;
+  private final ByteBuffer claimStamp;
   private final List<List<byte[]>> idPayloads;
 
-  public ClaimedIdPayloads(final ByteBuffer claimToken, final List<List<byte[]>> idPayloads) {
+  public ClaimedIdPayloads(final ByteBuffer claimStamp, final List<List<byte[]>> idPayloads) {
 
-    this.claimToken = claimToken;
+    this.claimStamp = claimStamp;
     this.idPayloads = idPayloads;
   }
 
-  public ByteBuffer getClaimToken() {
-    return claimToken;
+  public ByteBuffer getClaimStamp() {
+    return claimStamp;
   }
 
   public List<List<byte[]>> getIdPayloads() {

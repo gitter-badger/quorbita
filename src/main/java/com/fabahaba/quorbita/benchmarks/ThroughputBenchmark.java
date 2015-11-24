@@ -21,8 +21,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 public class ThroughputBenchmark {
 
@@ -82,7 +82,6 @@ public class ThroughputBenchmark {
 
       luaQ.consume(
           idPayloads -> {
-
             if (idPayloads.getIdPayloads().isEmpty()) {
               if (donePublishing.get()) {
                 startStop[1] = System.nanoTime();
@@ -93,17 +92,17 @@ public class ThroughputBenchmark {
             }
 
             if (batchRemove) {
-              luaQ.removeClaimed(idPayloads.getClaimToken().array(), idPayloads.getIdPayloads()
-                  .stream().map(ipPayload -> ipPayload.get(0)).toArray(byte[][]::new));
+              luaQ.removeClaimed(idPayloads.getClaimStamp(), idPayloads.getIdPayloads().stream()
+                  .map(ipPayload -> ipPayload.get(0)).toArray(byte[][]::new));
             } else {
               for (final List<byte[]> ipPayload : idPayloads.getIdPayloads()) {
-                luaQ.removeClaimed(idPayloads.getClaimToken().array(), ipPayload.get(0));
+                luaQ.removeClaimed(idPayloads.getClaimStamp(), ipPayload.get(0));
               }
             }
 
-
             return Boolean.TRUE;
           }, claimLimit);
+
       return startStop;
     }
   }
@@ -160,12 +159,10 @@ public class ThroughputBenchmark {
       for (long from = 0; from < numJobs;) {
 
         final long toExclusive = Math.min(from + publishBatchSize, numJobs);
-        final List<byte[]> idPayloads =
-            LongStream
-                .range(from, toExclusive)
-                .mapToObj(
-                    id -> new byte[][] { ByteBuffer.allocate(8).putLong(id).array(), payload })
-                .flatMap(Arrays::stream).collect(Collectors.toList());
+        final byte[][] idPayloads =
+            LongStream.range(from, toExclusive)
+                .mapToObj(id -> Stream.of(ByteBuffer.allocate(8).putLong(id).array(), payload))
+                .flatMap(s -> s).toArray(byte[][]::new);
 
         luaQ.publish(idPayloads);
 

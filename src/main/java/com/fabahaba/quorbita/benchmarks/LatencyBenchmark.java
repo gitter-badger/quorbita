@@ -3,6 +3,7 @@ package com.fabahaba.quorbita.benchmarks;
 import com.fabahaba.fava.collect.MapUtils;
 import com.fabahaba.jedipus.DirectJedisExecutor;
 import com.fabahaba.jedipus.JedisExecutor;
+import com.fabahaba.quorbita.luaq.ClaimedIdPayloads;
 import com.fabahaba.quorbita.luaq.LuaQ;
 import com.fabahaba.quorbita.luaq.LuaQScripts;
 import com.google.common.base.Throwables;
@@ -54,14 +55,17 @@ public class LatencyBenchmark {
     private final CountDownLatch latch;
     private final AtomicBoolean donePublishing;
     private final Map<Integer, long[]> publishClaimedStamps;
+    private final byte[] consumeBatchSize;
 
     public Consumer(final LuaQ luaQ, final CountDownLatch latch,
-        final AtomicBoolean donePublishing, final Map<Integer, long[]> publishClaimedStamps) {
+        final AtomicBoolean donePublishing, final Map<Integer, long[]> publishClaimedStamps,
+        final int consumeBatchSize) {
 
       this.luaQ = luaQ;
       this.latch = latch;
       this.donePublishing = donePublishing;
       this.publishClaimedStamps = publishClaimedStamps;
+      this.consumeBatchSize = String.valueOf(consumeBatchSize).getBytes(StandardCharsets.UTF_8);
     }
 
     @Override
@@ -73,24 +77,30 @@ public class LatencyBenchmark {
         throw Throwables.propagate(e);
       }
 
-      luaQ.consume(ipPayloads -> {
-        final long claimedStamp = System.nanoTime();
+      luaQ.consume(this::consumeClaimedIdPaylods, consumeBatchSize);
+    }
 
-        if (ipPayloads.getIdPayloads().isEmpty()) {
-          if (donePublishing.get()) {
-            if (luaQ.getPublishedQSize() == 0)
-              return Boolean.FALSE;
-          }
-          return Boolean.TRUE;
+    private Boolean consumeClaimedIdPaylods(final ClaimedIdPayloads claimedIdPayloads) {
+      final long claimedStamp = System.nanoTime();
+
+      if (claimedIdPayloads.getIdPayloads().isEmpty()) {
+        if (donePublishing.get()) {
+          if (luaQ.getPublishedQSize() == 0)
+            return Boolean.FALSE;
         }
+        return Boolean.TRUE;
+      }
 
-        final byte[] idBytes = ipPayloads.getIdPayloads().get(0).get(0);
+      final byte[][] ids = claimedIdPayloads.getIdPayloads().stream().map(idPayloads -> {
+        final byte[] idBytes = idPayloads.get(0);
         final int id = Integer.parseInt(new String(idBytes, StandardCharsets.UTF_8));
         publishClaimedStamps.get(id)[1] = claimedStamp;
+        return idBytes;
+      }).toArray(byte[][]::new);
 
-        luaQ.removeClaimed(ipPayloads.getClaimToken().array(), idBytes);
-        return Boolean.TRUE;
-      }, "1".getBytes(StandardCharsets.UTF_8));
+      luaQ.removeClaimed(claimedIdPayloads.getClaimStamp(), ids);
+
+      return Boolean.TRUE;
     }
   }
 
@@ -116,7 +126,7 @@ public class LatencyBenchmark {
 
       if (jedisPublisherAndPrototype == null) {
         consumerFutures.add(consumerExecutor.submit(new Consumer(luaQ, startLatch, donePublishing,
-            publishClaimedStamps)));
+            publishClaimedStamps, 1)));
         continue;
       }
 
@@ -126,7 +136,7 @@ public class LatencyBenchmark {
               ThroughputBenchmark.class.getSimpleName());
 
       consumerFutures.add(consumerExecutor.submit(new Consumer(directConsumerQ, startLatch,
-          donePublishing, publishClaimedStamps)));
+          donePublishing, publishClaimedStamps, 1)));
     }
 
     final byte[] payload = new byte[payloadSizeBytes];

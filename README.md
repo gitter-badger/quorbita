@@ -1,6 +1,19 @@
 #quorbita [![Build Status](https://travis-ci.org/jamespedwards42/quorbita.svg)](https://travis-ci.org/jamespedwards42/quorbita) [![JCenter](https://api.bintray.com/packages/jamespedwards42/libs/quorbita/images/download.svg) ](https://bintray.com/jamespedwards42/libs/quorbita/_latestVersion) [![License](http://img.shields.io/badge/license-Apache--2-blue.svg?style=flat) ](http://www.apache.org/licenses/LICENSE-2.0)
 
->Quorbita is a Java 8 client library that turns Redis into a reliable message broker.  
+>Quorbita is a Java 8 client library that turns Redis into a reliable message broker that supports:
+* Priority Queues.  The default implementation uses timestamps on publish.  The lowest score will be claimed first.
+* Reliably claim messages and refresh claim timestamps for long running tasks with check-ins.
+* Optional claim tokens to prevent client bugs during republishing, checking in, removing or killing.
+* Killing messages (Dead Letter Queue).
+* Methods for scanning claimed or dead messages for republishing or killing.
+  * You will need a dedicated service to re-drive abandoned claimed or dead messages.
+* Batch methods for publishing, claiming, checking in, removing, killing and republishing.
+* Barebones interface works with byte arrays to allow for the reuse of serialized data.
+
+####Motivation
+The motivation for creating Quorbita was to reuse existing Redis infrastructure rather than having to maintain an additional set of servers for a message broker.  If you are doing any kind of distributed processing you probably need a message queue and it also makes sense to have the swiss army knife of databases, Redis, on hand to coordinate state.  
+
+Quorbita isn't trying to compete with the likes of Kafka or NATS on performance, but it should perform better than other centrally brokered queues such as ActiveMQ and RabbitMQ depending on the CPU speed and load on your Redis instance.
 
 ###Usage
 ```java
@@ -30,7 +43,6 @@ final int blockingClaimTimeoutSeconds = 3;
 final byte[] claimLimit = "10".getBytes(StandardCharsets.UTF_8);
 
 quorbitaLuaQ.claim(claimLimit, blockingClaimTimeoutSeconds).ifPresent(claimedIdPayloads -> {
-   
   for (final List<byte[]> idPayload : claimedIdPayloads.getIdPayloads()) {
 
     final byte[] idBytes = idPayload.get(0);
@@ -39,7 +51,7 @@ quorbitaLuaQ.claim(claimLimit, blockingClaimTimeoutSeconds).ifPresent(claimedIdP
 
     System.out.printf("Claimed message with id '%s' and payload '%s'.%n", id, payload);
 
-    quorbitaLuaQ.removeClaimed(claimedIdPayloads.getClaimToken().array(), idBytes);
+    quorbitaLuaQ.removeClaimed(claimedIdPayloads.getClaimStamp(), idBytes);
     // quorbitaLuaQ.checkin(id)
   }
 });

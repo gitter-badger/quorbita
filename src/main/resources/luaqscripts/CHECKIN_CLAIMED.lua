@@ -4,8 +4,8 @@
 --  (1) claimedHKey
 
 -- ARGS:
---  (1) claimedScore
---  (2) score
+--  (1) claimStamp
+--  (2) newClaimStamp
 --  (3 ...) id
 
 local checkins = {};
@@ -18,8 +18,8 @@ while true do
    local id = ARGV[i];
    if id == nil then return checkins; end
 
-   local claimedScore = redis.call('hget', KEYS[1], id);
-   if claimedScore == nil or claimedScore ~= ARGV[1] then
+   local claimStamp = redis.call('hget', KEYS[1], id);
+   if claimStamp == nil or claimStamp ~= ARGV[1] then
       checkins[j] = 0;
    else
       checkins[j] = redis.call('hset', KEYS[1], id, ARGV[2]);

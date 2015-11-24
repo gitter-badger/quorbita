@@ -5,16 +5,16 @@ import java.util.List;
 
 public class ClaimedCheckins {
 
-  private final ByteBuffer claimToken;
+  private final ByteBuffer claimStamp;
   private final List<Long> checkins;
 
-  public ClaimedCheckins(final ByteBuffer claimToken, final List<Long> checkins) {
-    this.claimToken = claimToken;
+  public ClaimedCheckins(final ByteBuffer claimStamp, final List<Long> checkins) {
+    this.claimStamp = claimStamp;
     this.checkins = checkins;
   }
 
-  public ByteBuffer getClaimToken() {
-    return this.claimToken;
+  public ByteBuffer getClaimStamp() {
+    return this.claimStamp;
   }
 
   public List<Long> getCheckins() {

@@ -4,7 +4,7 @@
 --  (1) claimedHKey
 
 -- ARGS:
---  (1) score
+--  (1) newClaimStamp
 --  (2 ...) id
 
 local checkins = {};

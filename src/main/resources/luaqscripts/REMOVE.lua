@@ -10,12 +10,12 @@
 local removed = {};
 
 for i, id in pairs(ARGV) do
-   local deleted = redis.call('hdel', KEYS[1], id);
-   if deleted == 0 then
-      removed[i] = deleted;
+   local deleteClaim = redis.call('hdel', KEYS[1], id);
+   if deleteClaim == 0 then
+      removed[i] = deleteClaim;
    else
       redis.call('hdel', KEYS[2], id);
-      removed[i] = deleted;
+      removed[i] = deleteClaim;
    end
 end
 

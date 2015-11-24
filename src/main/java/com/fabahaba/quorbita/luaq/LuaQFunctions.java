@@ -24,9 +24,9 @@ public final class LuaQFunctions {
   private LuaQFunctions() {}
 
   @SuppressWarnings("unchecked")
-  public static List<Long> publish(final JedisExecutor jedisExecutor, final byte[] publishedZKey,
-      final byte[] claimedHKey, final byte[] payloadsHKey, final byte[] notifyLKey,
-      final int numRetries, final byte[]... idPayloads) {
+  public static List<Long> publish(final JedisExecutor jedisExecutor, final byte[] inversePriority,
+      final byte[] publishedZKey, final byte[] claimedHKey, final byte[] payloadsHKey,
+      final byte[] notifyLKey, final int numRetries, final byte[]... idPayloads) {
 
     int i = 5;
 
@@ -36,7 +36,7 @@ public final class LuaQFunctions {
     params[1] = claimedHKey;
     params[2] = payloadsHKey;
     params[3] = notifyLKey;
-    params[4] = LuaQFunctions.getEpochMillisBytes();
+    params[4] = publishedZKey;
 
     for (final byte[] idOrPayload : idPayloads) {
       params[i++] = idOrPayload;
@@ -46,9 +46,9 @@ public final class LuaQFunctions {
   }
 
   @SuppressWarnings("unchecked")
-  public static List<Long> publish(final JedisExecutor jedisExecutor, final byte[] publishedZKey,
-      final byte[] claimedHKey, final byte[] payloadsHKey, final byte[] notifyLKey,
-      final int numRetries, final Collection<byte[]> idPayloads) {
+  public static List<Long> publish(final JedisExecutor jedisExecutor, final byte[] inversePriority,
+      final byte[] publishedZKey, final byte[] claimedHKey, final byte[] payloadsHKey,
+      final byte[] notifyLKey, final int numRetries, final Collection<byte[]> idPayloads) {
 
     int i = 5;
 
@@ -58,7 +58,7 @@ public final class LuaQFunctions {
     params[1] = claimedHKey;
     params[2] = payloadsHKey;
     params[3] = notifyLKey;
-    params[4] = LuaQFunctions.getEpochMillisBytes();
+    params[4] = inversePriority;
 
     for (final byte[] idOrPayload : idPayloads) {
       params[i++] = idOrPayload;
@@ -69,8 +69,9 @@ public final class LuaQFunctions {
 
   @SuppressWarnings("unchecked")
   public static List<Long> republishAs(final JedisExecutor jedisExecutor,
-      final byte[] publishedZKey, final byte[] claimedOrDeadHKey, final byte[] notifyLKey,
-      final byte[] payloadsHKey, final int numRetries, final byte[]... idPayloads) {
+      final byte[] inversePriority, final byte[] publishedZKey, final byte[] claimedOrDeadHKey,
+      final byte[] notifyLKey, final byte[] payloadsHKey, final int numRetries,
+      final byte[]... idPayloads) {
 
     int i = 5;
 
@@ -80,7 +81,7 @@ public final class LuaQFunctions {
     params[1] = claimedOrDeadHKey;
     params[2] = notifyLKey;
     params[3] = payloadsHKey;
-    params[4] = LuaQFunctions.getEpochMillisBytes();
+    params[4] = inversePriority;
 
     for (final byte[] idOrPayload : idPayloads) {
       params[i++] = idOrPayload;
@@ -91,9 +92,9 @@ public final class LuaQFunctions {
 
   @SuppressWarnings("unchecked")
   public static List<Long> republishClaimedAs(final JedisExecutor jedisExecutor,
-      final byte[] claimToken, final byte[] publishedZKey, final byte[] claimedHKey,
-      final byte[] notifyLKey, final byte[] payloadsHKey, final int numRetries,
-      final byte[]... idPayloads) {
+      final byte[] inversePriority, final byte[] claimStamp, final byte[] publishedZKey,
+      final byte[] claimedHKey, final byte[] notifyLKey, final byte[] payloadsHKey,
+      final int numRetries, final byte[]... idPayloads) {
 
     int i = 6;
 
@@ -103,8 +104,8 @@ public final class LuaQFunctions {
     params[1] = claimedHKey;
     params[2] = notifyLKey;
     params[3] = payloadsHKey;
-    params[4] = claimToken;
-    params[5] = LuaQFunctions.getEpochMillisBytes();
+    params[4] = claimStamp;
+    params[5] = inversePriority;
 
     for (final byte[] idOrPayload : idPayloads) {
       params[i++] = idOrPayload;
@@ -114,9 +115,9 @@ public final class LuaQFunctions {
   }
 
   @SuppressWarnings("unchecked")
-  public static List<Long> republish(final JedisExecutor jedisExecutor, final byte[] publishedZKey,
-      final byte[] claimedOrDeadHKey, final byte[] notifyLKey, final int numRetries,
-      final String... ids) {
+  public static List<Long> republish(final JedisExecutor jedisExecutor,
+      final byte[] inversePriority, final byte[] publishedZKey, final byte[] claimedOrDeadHKey,
+      final byte[] notifyLKey, final int numRetries, final String... ids) {
 
     int i = 4;
 
@@ -125,7 +126,7 @@ public final class LuaQFunctions {
     params[0] = publishedZKey;
     params[1] = claimedOrDeadHKey;
     params[2] = notifyLKey;
-    params[3] = LuaQFunctions.getEpochMillisBytes();
+    params[3] = inversePriority;
 
     for (final String id : ids) {
       params[i++] = id.getBytes(StandardCharsets.UTF_8);
@@ -135,9 +136,9 @@ public final class LuaQFunctions {
   }
 
   @SuppressWarnings("unchecked")
-  public static List<Long> republish(final JedisExecutor jedisExecutor, final byte[] publishedZKey,
-      final byte[] claimedOrDeadHKey, final byte[] notifyLKey, final int numRetries,
-      final byte[]... ids) {
+  public static List<Long> republish(final JedisExecutor jedisExecutor,
+      final byte[] inversePriority, final byte[] publishedZKey, final byte[] claimedOrDeadHKey,
+      final byte[] notifyLKey, final int numRetries, final byte[]... ids) {
 
     int i = 4;
 
@@ -146,7 +147,7 @@ public final class LuaQFunctions {
     params[0] = publishedZKey;
     params[1] = claimedOrDeadHKey;
     params[2] = notifyLKey;
-    params[3] = LuaQFunctions.getEpochMillisBytes();
+    params[3] = inversePriority;
 
     for (final byte[] id : ids) {
       params[i++] = id;
@@ -157,8 +158,8 @@ public final class LuaQFunctions {
 
   @SuppressWarnings("unchecked")
   public static List<Long> republishClaimed(final JedisExecutor jedisExecutor,
-      final byte[] claimToken, final byte[] publishedZKey, final byte[] claimedHKey,
-      final byte[] notifyLKey, final int numRetries, final String... ids) {
+      final byte[] inversePriority, final byte[] claimStamp, final byte[] publishedZKey,
+      final byte[] claimedHKey, final byte[] notifyLKey, final int numRetries, final String... ids) {
 
     int i = 5;
 
@@ -167,8 +168,8 @@ public final class LuaQFunctions {
     params[0] = publishedZKey;
     params[1] = claimedHKey;
     params[2] = notifyLKey;
-    params[3] = claimToken;
-    params[4] = LuaQFunctions.getEpochMillisBytes();
+    params[3] = claimStamp;
+    params[4] = inversePriority;
 
     for (final String id : ids) {
       params[i++] = id.getBytes(StandardCharsets.UTF_8);
@@ -179,8 +180,8 @@ public final class LuaQFunctions {
 
   @SuppressWarnings("unchecked")
   public static List<Long> republishClaimed(final JedisExecutor jedisExecutor,
-      final byte[] claimToken, final byte[] publishedZKey, final byte[] claimedHKey,
-      final byte[] notifyLKey, final int numRetries, final byte[]... ids) {
+      final byte[] inversePriority, final byte[] claimStamp, final byte[] publishedZKey,
+      final byte[] claimedHKey, final byte[] notifyLKey, final int numRetries, final byte[]... ids) {
 
     int i = 5;
 
@@ -189,8 +190,8 @@ public final class LuaQFunctions {
     params[0] = publishedZKey;
     params[1] = claimedHKey;
     params[2] = notifyLKey;
-    params[3] = claimToken;
-    params[4] = LuaQFunctions.getEpochMillisBytes();
+    params[3] = claimStamp;
+    params[4] = inversePriority;
 
     for (final byte[] idOrPayload : ids) {
       params[i++] = idOrPayload;
@@ -222,7 +223,7 @@ public final class LuaQFunctions {
 
   @SuppressWarnings("unchecked")
   public static List<Long> killClaimedAs(final JedisExecutor jedisExecutor,
-      final byte[] claimToken, final byte[] deadHKey, final byte[] claimedHKey,
+      final byte[] claimStamp, final byte[] deadHKey, final byte[] claimedHKey,
       final byte[] payloadsHKey, final int numRetries, final byte[]... idPayloads) {
 
     int i = 5;
@@ -232,7 +233,7 @@ public final class LuaQFunctions {
     params[0] = deadHKey;
     params[1] = claimedHKey;
     params[2] = payloadsHKey;
-    params[3] = claimToken;
+    params[3] = claimStamp;
     params[4] = LuaQFunctions.getEpochMillisBytes();
 
     for (final byte[] idOrPayload : idPayloads) {
@@ -281,7 +282,7 @@ public final class LuaQFunctions {
   }
 
   @SuppressWarnings("unchecked")
-  public static List<Long> killClaimed(final JedisExecutor jedisExecutor, final byte[] claimToken,
+  public static List<Long> killClaimed(final JedisExecutor jedisExecutor, final byte[] claimStamp,
       final byte[] deadHKey, final byte[] claimedHKey, final int numRetries, final String... ids) {
 
     int i = 4;
@@ -290,7 +291,7 @@ public final class LuaQFunctions {
 
     params[0] = deadHKey;
     params[1] = claimedHKey;
-    params[2] = claimToken;
+    params[2] = claimStamp;
     params[3] = LuaQFunctions.getEpochMillisBytes();
 
     for (final String id : ids) {
@@ -301,7 +302,7 @@ public final class LuaQFunctions {
   }
 
   @SuppressWarnings("unchecked")
-  public static List<Long> killClaimed(final JedisExecutor jedisExecutor, final byte[] claimToken,
+  public static List<Long> killClaimed(final JedisExecutor jedisExecutor, final byte[] claimStamp,
       final byte[] deadHKey, final byte[] claimedHKey, final int numRetries, final byte[]... ids) {
 
     int i = 4;
@@ -310,7 +311,7 @@ public final class LuaQFunctions {
 
     params[0] = deadHKey;
     params[1] = claimedHKey;
-    params[2] = claimToken;
+    params[2] = claimStamp;
     params[3] = LuaQFunctions.getEpochMillisBytes();
 
     for (final byte[] id : ids) {
@@ -365,13 +366,13 @@ public final class LuaQFunctions {
       final byte[] claimedHKey, final byte[] payloadsHKey, final byte[] notifyListKey,
       final byte[] claimLimit) {
 
-    final byte[] epochMillisBytes = LuaQFunctions.getEpochMillisBytes();
+    final byte[] claimStamp = LuaQFunctions.getEpochMillisBytes();
 
     final List<List<byte[]>> idPayloads =
         (List<List<byte[]>>) LuaQScripts.CLAIM.eval(jedis, 4, publishedZKey, claimedHKey,
-            notifyListKey, payloadsHKey, epochMillisBytes, claimLimit);
+            notifyListKey, payloadsHKey, claimStamp, claimLimit);
 
-    return idPayloads.isEmpty() ? null : new ClaimedIdPayloads(ByteBuffer.wrap(epochMillisBytes),
+    return idPayloads.isEmpty() ? null : new ClaimedIdPayloads(ByteBuffer.wrap(claimStamp),
         idPayloads);
   }
 
@@ -467,14 +468,14 @@ public final class LuaQFunctions {
 
   @SuppressWarnings("unchecked")
   public static ClaimedCheckins checkinClaimed(final JedisExecutor jedisExecutor,
-      final byte[] claimToken, final byte[] claimedHKey, final int numRetries, final String... ids) {
+      final byte[] claimStamp, final byte[] claimedHKey, final int numRetries, final String... ids) {
 
     int i = 3;
 
     final byte[][] params = new byte[i + ids.length][];
 
     params[0] = claimedHKey;
-    params[1] = claimToken;
+    params[1] = claimStamp;
     params[2] = LuaQFunctions.getEpochMillisBytes();
 
     for (final String id : ids) {
@@ -489,14 +490,14 @@ public final class LuaQFunctions {
 
   @SuppressWarnings("unchecked")
   public static ClaimedCheckins checkinClaimed(final JedisExecutor jedisExecutor,
-      final byte[] claimToken, final byte[] claimedHKey, final int numRetries, final byte[]... ids) {
+      final byte[] claimStamp, final byte[] claimedHKey, final int numRetries, final byte[]... ids) {
 
     int i = 3;
 
     final byte[][] params = new byte[i + ids.length][];
 
     params[0] = claimedHKey;
-    params[1] = claimToken;
+    params[1] = claimStamp;
     params[2] = LuaQFunctions.getEpochMillisBytes();
 
     for (final byte[] id : ids) {
@@ -519,9 +520,14 @@ public final class LuaQFunctions {
     return LuaQFunctions.getEpochMillisString().getBytes(StandardCharsets.UTF_8);
   }
 
+  public static byte[] longToBytes(final long num) {
+
+    return String.valueOf(num).getBytes(StandardCharsets.UTF_8);
+  }
+
   @SuppressWarnings("unchecked")
   public static List<Long> removeClaimed(final JedisExecutor jedisExecutor,
-      final byte[] claimToken, final byte[] claimedHKey, final byte[] payloadsHKey,
+      final byte[] claimStamp, final byte[] claimedHKey, final byte[] payloadsHKey,
       final int numRetries, final String... ids) {
 
     int i = 3;
@@ -530,7 +536,7 @@ public final class LuaQFunctions {
 
     params[0] = claimedHKey;
     params[1] = payloadsHKey;
-    params[2] = claimToken;
+    params[2] = claimStamp;
 
     for (final String id : ids) {
       params[i++] = id.getBytes(StandardCharsets.UTF_8);
@@ -541,7 +547,7 @@ public final class LuaQFunctions {
 
   @SuppressWarnings("unchecked")
   public static List<Long> removeClaimed(final JedisExecutor jedisExecutor,
-      final byte[] claimToken, final byte[] claimedHKey, final byte[] payloadsHKey,
+      final byte[] claimStamp, final byte[] claimedHKey, final byte[] payloadsHKey,
       final int numRetries, final byte[]... ids) {
 
     int i = 3;
@@ -550,7 +556,7 @@ public final class LuaQFunctions {
 
     params[0] = claimedHKey;
     params[1] = payloadsHKey;
-    params[2] = claimToken;
+    params[2] = claimStamp;
 
     for (final byte[] id : ids) {
       params[i++] = id;
@@ -660,16 +666,16 @@ public final class LuaQFunctions {
   }
 
   public static void hScanPayloads(final JedisExecutor jedisExecutor, final byte[] hKey,
-      final byte[] payloadsHKey, final Consumer<List<List<byte[]>>> idScorePayloadsConsumer) {
+      final byte[] payloadsHKey, final Consumer<List<List<byte[]>>> idStampPayloadsConsumer) {
 
     LuaQFunctions.scanPayloads(jedisExecutor, HSCAN, hKey, payloadsHKey, DEFAULT_COUNT,
-        idScorePayloadsConsumer);
+        idStampPayloadsConsumer);
   }
 
   @SuppressWarnings("unchecked")
   public static void scanPayloads(final JedisExecutor jedisExecutor, final byte[] scanCommand,
       final byte[] key, final byte[] payloadsHKey, final byte[] count,
-      final Consumer<List<List<byte[]>>> idScorePayloadsConsumer) {
+      final Consumer<List<List<byte[]>>> idValuePayloadsConsumer) {
 
     for (byte[] cursor = SCAN_SENTINEL_CURSOR;;) {
 
@@ -681,7 +687,7 @@ public final class LuaQFunctions {
 
       cursor = (byte[]) results.get(0);
 
-      idScorePayloadsConsumer.accept((List<List<byte[]>>) results.get(1));
+      idValuePayloadsConsumer.accept((List<List<byte[]>>) results.get(1));
 
       if (Arrays.equals(cursor, SCAN_SENTINEL_CURSOR))
         return;

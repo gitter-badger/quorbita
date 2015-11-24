@@ -2,12 +2,12 @@
 
 -- KEYS:
 --  (1) deadHKey
---  (2) claimedIdsHKey
+--  (2) claimedHKey
 --  (3) payloadsHKey
 
 -- ARGS:
---  (1) claimedScore
---  (2) score
+--  (1) claimStamp
+--  (2) deadStamp
 --  (3 4 ...) id payload
 
 local killed = {};
@@ -27,8 +27,8 @@ while true do
    local id = ARGV[i];
    if id == nil then return killed; end
 
-   local claimedScore = redis.call('hget', KEYS[2], id);
-   if claimedScore == nil or claimedScore ~= ARGV[1] then
+   local claimStamp = redis.call('hget', KEYS[2], id);
+   if claimStamp == nil or claimStamp ~= ARGV[1] then
       killed[j] = -1;
    else
       redis.call('hdel', KEYS[2], ARGV[3]);

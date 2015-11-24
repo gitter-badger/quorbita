@@ -1,5 +1,5 @@
 -- Returns 1 if the result was set, or 0 if a result already exists.
--- Notifies THE idle published reduce queue if zero mapped results are pending.
+-- Notifies the idle published reduce queue if zero mapped results are pending.
 
 -- KEYS:
 --  (1) publishedReduceZKey
@@ -17,10 +17,13 @@
 --  (3) id
 --  (4) resultPayload
 
+local setResult = 0;
+
 if redis.call('srem', KEYS[4], ARGV[3]) > 0 then
-   
+
    if redis.call('hsetnx', KEYS[3], ARGV[3], ARGV[4]) > 0 then
 
+      setResult = 1;
       redis.call('lpush', KEYS[6], ARGV[3]);
 
       if redis.call('hexists', KEYS[2], ARGV[1]) == 0 then

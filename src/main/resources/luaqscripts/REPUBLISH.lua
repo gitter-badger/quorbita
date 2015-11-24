@@ -27,8 +27,8 @@ while true do
    local id = ARGV[i];
    if id == nil then return republished; end
 
-   local deleted = redis.call('hdel', KEYS[2], id);
-   if deleted == 0 then
+   local deleteClaim = redis.call('hdel', KEYS[2], id);
+   if deleteClaim == 0 then
       republished[j] = -1;
    else
       republished[j] = redis.call('zadd', KEYS[1], 'NX', ARGV[1], id);

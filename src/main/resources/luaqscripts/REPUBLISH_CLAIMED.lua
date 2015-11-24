@@ -7,7 +7,7 @@
 --  (4) payloadsHKey
 
 -- ARGS:
---  (1) claimedScore
+--  (1) claimStamp
 --  (2) score
 --  (3 4 ...) id payload
 
@@ -28,8 +28,8 @@ while true do
    local id = ARGV[i];
    if id == nil then return republished; end
 
-   local claimedScore = redis.call('hget', KEYS[2], id);
-   if claimedScore == nil or claimedScore ~= ARGV[1] then
+   local claimStamp = redis.call('hget', KEYS[2], id);
+   if claimStamp == nil or claimStamp ~= ARGV[1] then
       republished[j] = -1;
    else
       redis.call('hdel', KEYS[2], id);

@@ -7,7 +7,7 @@
 --  (4) payloadsHKey
 
 -- ARGS:
---  (1) score
+--  (1) claimStamp
 --  (2) limit
 
 local idPayloads = {};

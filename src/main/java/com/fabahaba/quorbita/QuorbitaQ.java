@@ -7,6 +7,7 @@ import com.fabahaba.quorbita.luaq.LuaQFunctions;
 
 import redis.clients.jedis.ScanParams;
 
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map.Entry;
@@ -23,6 +24,11 @@ public interface QuorbitaQ {
     return DEFAULT_NUM_RETRIES;
   }
 
+  default byte[] getDefaultInversePriority() {
+
+    return LuaQFunctions.getEpochMillisBytes();
+  }
+
   public String getQName();
 
   public JedisExecutor getJedisExecutor();
@@ -32,80 +38,207 @@ public interface QuorbitaQ {
     return publish(getDefaultNumRetries(), idPayloads);
   }
 
-  public List<Long> publish(final int numRetries, final byte[]... idPayloads);
+  default List<Long> publish(final long inversePriority, final byte[]... idPayloads) {
+
+    return publish(LuaQFunctions.longToBytes(inversePriority), getDefaultNumRetries(), idPayloads);
+  }
+
+  default List<Long> publish(final int numRetries, final byte[]... idPayloads) {
+
+    return publish(getDefaultInversePriority(), numRetries, idPayloads);
+  }
+
+  public List<Long> publish(final byte[] inversePriority, final int numRetries,
+      final byte[]... idPayloads);
 
   default List<Long> publish(final Collection<byte[]> idPayloads) {
 
     return publish(idPayloads, getDefaultNumRetries());
   }
 
-  public List<Long> publish(final Collection<byte[]> idPayloads, final int numRetries);
+  default List<Long> publish(final byte[] inversePriority, final Collection<byte[]> idPayloads) {
+
+    return publish(inversePriority, idPayloads, getDefaultNumRetries());
+  }
+
+  default List<Long> publish(final Collection<byte[]> idPayloads, final int numRetries) {
+
+    return publish(getDefaultInversePriority(), idPayloads, numRetries);
+  }
+
+  public List<Long> publish(final byte[] inversePriority, final Collection<byte[]> idPayloads,
+      final int numRetries);
 
   default List<Long> republish(final byte[]... ids) {
 
     return republish(getDefaultNumRetries(), ids);
   }
 
-  public List<Long> republish(final int numRetries, final byte[]... ids);
+  default List<Long> republish(final long inversePriority, final byte[]... ids) {
+
+    return republish(LuaQFunctions.longToBytes(inversePriority), getDefaultNumRetries(), ids);
+  }
+
+  default List<Long> republish(final int numRetries, final byte[]... ids) {
+
+    return republish(getDefaultInversePriority(), numRetries, ids);
+  }
+
+  public List<Long> republish(final byte[] inversePriority, final int numRetries,
+      final byte[]... ids);
 
   default List<Long> republish(final String... ids) {
 
     return republish(getDefaultNumRetries(), ids);
   }
 
-  public List<Long> republish(final int numRetries, final String... ids);
+  default List<Long> republish(final byte[] inversePriority, final String... ids) {
+
+    return republish(inversePriority, getDefaultNumRetries(), ids);
+  }
+
+  default List<Long> republish(final int numRetries, final String... ids) {
+
+    return republish(getDefaultInversePriority(), numRetries, ids);
+  }
+
+  public List<Long> republish(final byte[] inversePriority, final int numRetries,
+      final String... ids);
 
   default List<Long> republishAs(final byte[]... idPayloads) {
 
     return republishAs(getDefaultNumRetries(), idPayloads);
   }
 
-  public List<Long> republishAs(final int numRetries, byte[]... idPayloads);
+  default List<Long> republishAs(final long inversePriority, final byte[]... idPayloads) {
 
-  default List<Long> republishClaimed(final byte[] claimToken, final byte[]... ids) {
-
-    return republishClaimed(claimToken, getDefaultNumRetries(), ids);
+    return republishAs(LuaQFunctions.longToBytes(inversePriority), getDefaultNumRetries(),
+        idPayloads);
   }
 
-  public List<Long> republishClaimed(final byte[] claimToken, final int numRetries,
-      final byte[]... ids);
+  default List<Long> republishAs(final int numRetries, final byte[]... idPayloads) {
 
-  default List<Long> republishClaimed(final byte[] claimToken, final String... ids) {
-
-    return republishClaimed(claimToken, getDefaultNumRetries(), ids);
+    return republishAs(getDefaultInversePriority(), numRetries, idPayloads);
   }
 
-  public List<Long> republishClaimed(final byte[] claimToken, final int numRetries,
-      final String... ids);
+  public List<Long> republishAs(final byte[] inversePriority, final int numRetries,
+      byte[]... idPayloads);
 
-  default List<Long> republishClaimedAs(final byte[] claimToken, final byte[]... idPayloads) {
+  default List<Long> republishClaimed(final ByteBuffer claimStamp, final byte[]... ids) {
 
-    return republishClaimedAs(claimToken, getDefaultNumRetries(), idPayloads);
+    return republishClaimed(claimStamp.array(), getDefaultNumRetries(), ids);
   }
 
-  public List<Long> republishClaimedAs(final byte[] claimToken, final int numRetries,
-      final byte[]... idPayloads);
+  default List<Long> republishClaimed(final byte[] inversePriority, final ByteBuffer claimStamp,
+      final byte[]... ids) {
+
+    return republishClaimed(inversePriority, claimStamp.array(), getDefaultNumRetries(), ids);
+  }
+
+  default List<Long> republishClaimed(final byte[] claimStamp, final int numRetries,
+      final byte[]... ids) {
+
+    return republishClaimed(getDefaultInversePriority(), claimStamp, numRetries, ids);
+  }
+
+  public List<Long> republishClaimed(final byte[] inversePriority, final byte[] claimStamp,
+      final int numRetries, final byte[]... ids);
+
+  default List<Long> republishClaimed(final byte[] claimStamp, final String... ids) {
+
+    return republishClaimed(claimStamp, getDefaultNumRetries(), ids);
+  }
+
+  default List<Long> republishClaimed(final byte[] inversePriority, final byte[] claimStamp,
+      final String... ids) {
+
+    return republishClaimed(inversePriority, claimStamp, getDefaultNumRetries(), ids);
+  }
+
+  default List<Long> republishClaimed(final byte[] claimStamp, final int numRetries,
+      final String... ids) {
+
+    return republishClaimed(getDefaultInversePriority(), claimStamp, numRetries, ids);
+  }
+
+  public List<Long> republishClaimed(final byte[] inversePriority, final byte[] claimStamp,
+      final int numRetries, final String... ids);
+
+  default List<Long> republishClaimedAs(final ByteBuffer claimStamp, final byte[]... idPayloads) {
+
+    return republishClaimedAs(claimStamp.array(), getDefaultNumRetries(), idPayloads);
+  }
+
+  default List<Long> republishClaimedAs(final byte[] inversePriority, final ByteBuffer claimStamp,
+      final byte[]... idPayloads) {
+
+    return republishClaimedAs(inversePriority, claimStamp.array(), getDefaultNumRetries(),
+        idPayloads);
+  }
+
+  default List<Long> republishClaimedAs(final byte[] claimStamp, final int numRetries,
+      final byte[]... idPayloads) {
+
+    return republishClaimedAs(getDefaultInversePriority(), claimStamp, numRetries, idPayloads);
+  }
+
+  public List<Long> republishClaimedAs(final byte[] inversePriority, final byte[] claimStamp,
+      final int numRetries, final byte[]... idPayloads);
 
   default List<Long> republishDead(final byte[]... ids) {
 
     return republishDead(getDefaultNumRetries(), ids);
   }
 
-  public List<Long> republishDead(final int numRetries, final byte[]... ids);
+  default List<Long> republishDead(final long inversePriority, final byte[]... ids) {
+
+    return republishDead(LuaQFunctions.longToBytes(inversePriority), getDefaultNumRetries(), ids);
+  }
+
+  default List<Long> republishDead(final int numRetries, final byte[]... ids) {
+
+    return republishDead(getDefaultInversePriority(), numRetries, ids);
+  }
+
+  public List<Long> republishDead(final byte[] inversePriority, final int numRetries,
+      final byte[]... ids);
 
   default List<Long> republishDead(final String... ids) {
 
     return republishDead(getDefaultNumRetries(), ids);
   }
 
-  public List<Long> republishDead(final int numRetries, final String... ids);
+  default List<Long> republishDead(final byte[] inversePriority, final String... ids) {
+
+    return republishDead(inversePriority, getDefaultNumRetries(), ids);
+  }
+
+  default List<Long> republishDead(final int numRetries, final String... ids) {
+
+    return republishDead(getDefaultInversePriority(), numRetries, ids);
+  }
+
+  public List<Long> republishDead(final byte[] inversePriority, final int numRetries,
+      final String... ids);
 
   default List<Long> republishDeadAs(final byte[]... idPayloads) {
 
     return republishDeadAs(getDefaultNumRetries(), idPayloads);
   }
 
-  public List<Long> republishDeadAs(final int numRetries, final byte[]... idPayloads);
+  default List<Long> republishDeadAs(final long inversePriority, final byte[]... idPayloads) {
+
+    return republishDeadAs(LuaQFunctions.longToBytes(inversePriority), getDefaultNumRetries(),
+        idPayloads);
+  }
+
+  default List<Long> republishDeadAs(final int numRetries, final byte[]... idPayloads) {
+
+    return republishDeadAs(getDefaultInversePriority(), numRetries, idPayloads);
+  }
+
+  public List<Long> republishDeadAs(final byte[] inversePriority, final int numRetries,
+      final byte[]... idPayloads);
 
   default List<Long> kill(final String... ids) {
 
@@ -121,19 +254,19 @@ public interface QuorbitaQ {
 
   public List<Long> killAs(final int numRetries, final byte[]... idPayloads);
 
-  default List<Long> killClaimed(final byte[] claimToken, final String... ids) {
+  default List<Long> killClaimed(final byte[] claimStamp, final String... ids) {
 
-    return killClaimed(claimToken, getDefaultNumRetries(), ids);
+    return killClaimed(claimStamp, getDefaultNumRetries(), ids);
   }
 
-  public List<Long> killClaimed(final byte[] claimToken, final int numRetries, final String... ids);
+  public List<Long> killClaimed(final byte[] claimStamp, final int numRetries, final String... ids);
 
-  default List<Long> killClaimedAs(final byte[] claimToken, final byte[]... idPayloads) {
+  default List<Long> killClaimedAs(final ByteBuffer claimStamp, final byte[]... idPayloads) {
 
-    return killClaimedAs(claimToken, getDefaultNumRetries(), idPayloads);
+    return killClaimedAs(claimStamp.array(), getDefaultNumRetries(), idPayloads);
   }
 
-  public List<Long> killClaimedAs(final byte[] claimToken, final int numRetries,
+  public List<Long> killClaimedAs(final byte[] claimStamp, final int numRetries,
       final byte[]... idPayloads);
 
   public Optional<ClaimedIdPayloads> claim(final byte[] claimLimit);
@@ -160,22 +293,21 @@ public interface QuorbitaQ {
 
   public ClaimedCheckins checkin(final int numRetries, final byte[]... ids);
 
-  default ClaimedCheckins checkinClaimed(final byte[] claimToken, final String... ids) {
+  default ClaimedCheckins checkinClaimed(final byte[] claimStamp, final String... ids) {
 
-    return checkinClaimed(claimToken, getDefaultNumRetries(), ids);
+    return checkinClaimed(claimStamp, getDefaultNumRetries(), ids);
   }
 
-  public ClaimedCheckins checkinClaimed(final byte[] claimToken, final int numRetries,
+  public ClaimedCheckins checkinClaimed(final byte[] claimStamp, final int numRetries,
       final String... ids);
 
-  default ClaimedCheckins checkinClaimed(final byte[] claimToken, final byte[]... ids) {
+  default ClaimedCheckins checkinClaimed(final ByteBuffer claimStamp, final byte[]... ids) {
 
-    return checkinClaimed(claimToken, getDefaultNumRetries(), ids);
+    return checkinClaimed(claimStamp.array(), getDefaultNumRetries(), ids);
   }
 
-  public ClaimedCheckins checkinClaimed(final byte[] claimToken, final int numRetries,
+  public ClaimedCheckins checkinClaimed(final byte[] claimStamp, final int numRetries,
       final byte[]... ids);
-
 
   default List<Long> remove(final String... ids) {
 
@@ -191,20 +323,20 @@ public interface QuorbitaQ {
 
   public List<Long> remove(final int numRetries, final byte[]... ids);
 
-  default List<Long> removeClaimed(final byte[] claimToken, final String... ids) {
+  default List<Long> removeClaimed(final byte[] claimStamp, final String... ids) {
 
-    return removeClaimed(claimToken, getDefaultNumRetries(), ids);
+    return removeClaimed(claimStamp, getDefaultNumRetries(), ids);
   }
 
-  public List<Long> removeClaimed(final byte[] claimToken, final int numRetries,
+  public List<Long> removeClaimed(final byte[] claimStamp, final int numRetries,
       final String... ids);
 
-  default List<Long> removeClaimed(final byte[] claimToken, final byte[]... ids) {
+  default List<Long> removeClaimed(final ByteBuffer claimStamp, final byte[]... ids) {
 
-    return removeClaimed(claimToken, getDefaultNumRetries(), ids);
+    return removeClaimed(claimStamp.array(), getDefaultNumRetries(), ids);
   }
 
-  public List<Long> removeClaimed(final byte[] claimToken, final int numRetries,
+  public List<Long> removeClaimed(final byte[] claimStamp, final int numRetries,
       final byte[]... ids);
 
   default List<Long> removeDead(final String... ids) {
@@ -254,17 +386,17 @@ public interface QuorbitaQ {
 
   public void scanPublishedPayloads(final Consumer<List<List<byte[]>>> idScorePayloadsConsumer);
 
-  default void scanClaimedIdScores(final Consumer<List<Entry<byte[], byte[]>>> idValuesConsumer) {
+  default void scanClaimedIdStampPairs(final Consumer<List<Entry<byte[], byte[]>>> idStampConsumer) {
 
-    scanClaimedIdScores(idValuesConsumer, LuaQFunctions.DEFAULT_SCAN_PARAMS);
+    scanClaimedIdStampPairs(idStampConsumer, LuaQFunctions.DEFAULT_SCAN_PARAMS);
   }
 
-  public void scanClaimedIdScores(final Consumer<List<Entry<byte[], byte[]>>> idValuesConsumer,
+  public void scanClaimedIdStampPairs(final Consumer<List<Entry<byte[], byte[]>>> idStampConsumer,
       final ScanParams scanParams);
 
-  public void scanClaimedPayloads(final Consumer<List<List<byte[]>>> idScorePayloadsConsumer);
+  public void scanClaimedPayloads(final Consumer<List<List<byte[]>>> idStampPayloadsConsumer);
 
-  public void scanDeadPayloads(final Consumer<List<List<byte[]>>> idScorePayloadsConsumer);
+  public void scanDeadPayloads(final Consumer<List<List<byte[]>>> idStampPayloadsConsumer);
 
-  public void scanPayloadStates(final Consumer<List<List<Object>>> idPayloadStatesConsumer);
+  public void scanPayloadStates(final Consumer<List<List<Object>>> idValuePayloadsConsumer);
 }
