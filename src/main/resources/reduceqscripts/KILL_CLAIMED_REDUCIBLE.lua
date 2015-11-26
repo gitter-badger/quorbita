@@ -8,17 +8,19 @@
 --  (5) payloadsReduceHKey
 
 -- ARGS:
---  (1) reduceId
---  (2) reducePayload
+--  (1) claimStamp
+--  (2) reduceId
+--  (3) reducePayload
 
-if redis.call('hdel', KEYS[3], ARGV[1]) == 0 then return -1; end
+if redis.call('hget', KEYS[3], ARGV[2]) ~= ARGV[1] then return -1; end
 
 local numPending = redis.call('scard', KEYS[4]);
-local killed = redis.call('hsetnx', KEYS[1], ARGV[1], numPending);
-redis.call('hdel', KEYS[2], ARGV[1]);
+local killed = redis.call('hsetnx', KEYS[1], ARGV[2], numPending);
+redis.call('hdel', KEYS[2], ARGV[2]);
+redis.call('hdel', KEYS[3], ARGV[2]);
 
 if KEYS[5] and killed > 0 then
-   redis.call('hset', KEYS[5], ARGV[1], ARGV[2]);
+   redis.call('hset', KEYS[5], ARGV[2], ARGV[3]);
 end
 
 return killed;

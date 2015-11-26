@@ -7,7 +7,7 @@
 --  (4) notifyLKey
 
 -- ARGS:
---  (1) score
+--  (1) inverseScore
 --  (2 3 ...) id payload
 
 local published = {};
@@ -26,7 +26,7 @@ while true do
          published[j] = 1;
       else
          published[j] = 0;
-      end   
+      end
    else
       published[j] = -1;
    end

@@ -94,24 +94,24 @@ public class LuaQ extends BaseQ implements QuorbitaQ {
   public List<Long> republishDead(final byte[] inversePriority, final int numRetries,
       final String... ids) {
 
-    return LuaQFunctions.republish(jedisExecutor, inversePriority, publishedZKey, deadHKey,
-        notifyLKey, numRetries, ids);
+    return LuaQFunctions.republishDead(jedisExecutor, inversePriority, publishedZKey, claimedHKey,
+        deadHKey, notifyLKey, numRetries, ids);
   }
 
   @Override
   public List<Long> republishDead(final byte[] inversePriority, final int numRetries,
       final byte[]... ids) {
 
-    return LuaQFunctions.republish(jedisExecutor, inversePriority, publishedZKey, deadHKey,
-        notifyLKey, numRetries, ids);
+    return LuaQFunctions.republishDead(jedisExecutor, inversePriority, publishedZKey, claimedHKey,
+        deadHKey, notifyLKey, numRetries, ids);
   }
 
   @Override
   public List<Long> republishDeadAs(final byte[] inversePriority, final int numRetries,
       final byte[]... idPayloads) {
 
-    return LuaQFunctions.republishAs(jedisExecutor, inversePriority, publishedZKey, deadHKey,
-        notifyLKey, payloadsHKey, numRetries, idPayloads);
+    return LuaQFunctions.republishDeadAs(jedisExecutor, inversePriority, publishedZKey,
+        claimedHKey, deadHKey, notifyLKey, payloadsHKey, numRetries, idPayloads);
   }
 
   @Override
@@ -173,18 +173,6 @@ public class LuaQ extends BaseQ implements QuorbitaQ {
   }
 
   @Override
-  public ClaimedCheckins checkin(final int numRetries, final String... ids) {
-
-    return LuaQFunctions.checkin(jedisExecutor, claimedHKey, numRetries, ids);
-  }
-
-  @Override
-  public ClaimedCheckins checkin(final int numRetries, final byte[]... ids) {
-
-    return LuaQFunctions.checkin(jedisExecutor, claimedHKey, numRetries, ids);
-  }
-
-  @Override
   public ClaimedCheckins checkinClaimed(final byte[] claimStamp, final int numRetries,
       final String... ids) {
 
@@ -229,13 +217,15 @@ public class LuaQ extends BaseQ implements QuorbitaQ {
   @Override
   public List<Long> removeDead(final int numRetries, final String... ids) {
 
-    return LuaQFunctions.remove(jedisExecutor, deadHKey, payloadsHKey, numRetries, ids);
+    return LuaQFunctions.removeDead(jedisExecutor, publishedZKey, claimedHKey, deadHKey,
+        payloadsHKey, numRetries, ids);
   }
 
   @Override
   public List<Long> removeDead(final int numRetries, final byte[]... ids) {
 
-    return LuaQFunctions.remove(jedisExecutor, deadHKey, payloadsHKey, numRetries, ids);
+    return LuaQFunctions.removeDead(jedisExecutor, publishedZKey, claimedHKey, deadHKey,
+        payloadsHKey, numRetries, ids);
   }
 
   @Override

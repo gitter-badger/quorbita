@@ -12,12 +12,7 @@
 local killed = {};
 
 local i = 2;
-local incr;
-if KEYS[3] then
-   incr=2;
-else
-   incr=1;
-end
+local incr = KEYS[3] and 2 or 1;
 
 local j = 1;
 
@@ -26,15 +21,16 @@ while true do
    local id = ARGV[i];
    if id == nil then return killed; end
 
-   local deleteClaim = redis.call('hdel', KEYS[2], id);
-   if deleteClaim == 0 then
+   if redis.call('hdel', KEYS[2], id) == 0 then
       killed[j] = -1;
    else
-      killed[j] = redis.call('hset', KEYS[1], id, ARGV[1]);
+      local killed = redis.call('hsetnx', KEYS[1], id, ARGV[1]);
 
-      if KEYS[3] then
+      if KEYS[3] and killed > 0 then
          redis.call('hset', KEYS[3], id, ARGV[i+1]);
       end
+
+      killed[j] = killed;
    end
 
    i = i + incr;

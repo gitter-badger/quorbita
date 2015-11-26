@@ -6,7 +6,7 @@ Quorbita is a Java 8 client library that turns Redis into a reliable message bro
 * Extending claims via check-ins for long running tasks.
 * Blocking claim methods.
 * De-duping messages if they are already claimed or published.
-* Claim timestamps may optionally serve as tokens to prevent concurrent client bugs during republishing, checking in, removing or killing.
+* Claim timestamps serve as tokens to prevent concurrent client bugs during republishing, checking in, removing or killing.
 * Killing messages (Dead Letter Queue).
 * Methods for scanning claimed or dead messages for republishing or killing.
   * You will need a dedicated service to re-drive abandoned claimed or dead messages.

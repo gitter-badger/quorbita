@@ -96,7 +96,7 @@ public class ReduceQFunctions {
       final byte[] notifyReduceLKey, final byte[] payloadReduceHKey, final byte[] reduceId,
       final byte[] reducePayload, final int numRetries) {
 
-    return (Long) ReduceQScripts.REPUBLISH_REDUCIBLE.eval(jedisExecutor, numRetries, 4,
+    return (Long) ReduceQScripts.REPUBLISH_CLAIMED_REDUCIBLE.eval(jedisExecutor, numRetries, 4,
         publishedReduceZKey, claimedReduceHKey, notifyReduceLKey, payloadReduceHKey, reduceId,
         reducePayload);
   }
@@ -105,7 +105,7 @@ public class ReduceQFunctions {
       final byte[] publishedReduceZKey, final byte[] claimedReduceHKey,
       final byte[] notifyReduceLKey, final byte[] reduceId, final int numRetries) {
 
-    return (Long) ReduceQScripts.REPUBLISH_REDUCIBLE.eval(jedisExecutor, numRetries, 3,
+    return (Long) ReduceQScripts.REPUBLISH_CLAIMED_REDUCIBLE.eval(jedisExecutor, numRetries, 3,
         publishedReduceZKey, claimedReduceHKey, notifyReduceLKey, reduceId);
   }
 
@@ -132,16 +132,17 @@ public class ReduceQFunctions {
       final byte[] payloadReduceHKey, final byte[] reduceId, final byte[] reducePayload,
       final int numRetries) {
 
-    return (Long) ReduceQScripts.KILL_REDUCIBLE.eval(jedisExecutor, numRetries, 4, deadReduceHKey,
-        claimedReduceHKey, pendingMappedSKey, payloadReduceHKey, reduceId, reducePayload);
+    return (Long) ReduceQScripts.KILL_CLAIMED_REDUCIBLE.eval(jedisExecutor, numRetries, 4,
+        deadReduceHKey, claimedReduceHKey, pendingMappedSKey, payloadReduceHKey, reduceId,
+        reducePayload);
   }
 
   public static Long killReducible(final JedisExecutor jedisExecutor, final byte[] deadReduceHKey,
       final byte[] claimedReduceHKey, final byte[] pendingMappedSKey, final byte[] reduceId,
       final int numRetries) {
 
-    return (Long) ReduceQScripts.KILL_REDUCIBLE.eval(jedisExecutor, numRetries, 3, deadReduceHKey,
-        claimedReduceHKey, pendingMappedSKey, reduceId);
+    return (Long) ReduceQScripts.KILL_CLAIMED_REDUCIBLE.eval(jedisExecutor, numRetries, 3,
+        deadReduceHKey, claimedReduceHKey, pendingMappedSKey, reduceId);
   }
 
   public static List<byte[]> claimReducible(final JedisExecutor jedisExecutor,

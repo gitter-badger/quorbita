@@ -1,4 +1,4 @@
--- Returns a list indicating if each job was removed (1) or not (0).
+-- Returns a list indicating if each job was removed (1) or not (0) or no longer claimed (-1).
 
 -- KEYS:
 --  (1) claimedHKey
@@ -18,13 +18,11 @@ while true do
    local id = ARGV[i];
    if id == nil then return removed; end
 
-   local claimStamp = redis.call('hget', KEYS[1], id);
-   if claimStamp == nil or claimStamp ~= ARGV[1] then
-      removed[j] = 0;
+   if redis.call('hget', KEYS[1], id) ~= ARGV[1] then
+      removed[j] = -1;
    else
-      redis.call('hdel', KEYS[1], id);
       redis.call('hdel', KEYS[2], id);
-      removed[j] = 1;
+      removed[j] = redis.call('hdel', KEYS[1], id);
    end
 
    i = i + 1;

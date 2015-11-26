@@ -279,20 +279,6 @@ public interface QuorbitaQ {
   public void consume(final Function<ClaimedIdPayloads, Boolean> idPayloadConsumer,
       final byte[] claimLimit);
 
-  default ClaimedCheckins checkin(final String... ids) {
-
-    return checkin(getDefaultNumRetries(), ids);
-  }
-
-  public ClaimedCheckins checkin(final int numRetries, final String... ids);
-
-  default ClaimedCheckins checkin(final byte[]... ids) {
-
-    return checkin(getDefaultNumRetries(), ids);
-  }
-
-  public ClaimedCheckins checkin(final int numRetries, final byte[]... ids);
-
   default ClaimedCheckins checkinClaimed(final byte[] claimStamp, final String... ids) {
 
     return checkinClaimed(claimStamp, getDefaultNumRetries(), ids);

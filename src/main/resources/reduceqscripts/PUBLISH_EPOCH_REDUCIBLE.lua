@@ -12,14 +12,14 @@
 --  (9) payloadsReduceHKey
 
 -- ARGS:
---  (1) score
+--  (1) inverseScore
 --  (2) reduceWeight
 --  (3) reduceId
 --  (4) reducePayload
 --  (5 6 ...) id payload
 
 local published = {};
-local weight = 0;
+local weight;
 
 local i = 5;
 local j = 1;
@@ -36,7 +36,7 @@ while true do
             redis.call('sadd', KEYS[5], id);
             redis.call('lpush', KEYS[4], id);
             published[j] = 1;
-            weight = weight + ARGV[2]
+            weight = (weight or 0) + ARGV[2];
          else
             published[j] = 0;
          end
@@ -51,11 +51,15 @@ while true do
    j = j + 1;
 end
 
-if redis.call('hexists', KEYS[8], ARGV[3]) == 0 then
-   redis.call('hsetnx', KEYS[9], ARGV[3], ARGV[4]);
-   redis.call('zadd', KEYS[7], weight, ARGV[3]);
-else
-   redis.call('hincrby', KEYS[8], ARGV[3], weight);
+if weight then
+   -- Update claimed or published inverseScore.
+   -- Set reduce payload if not already claimed or published.
+   if redis.call('hexists', KEYS[8], ARGV[3]) == 0 then
+      redis.call('hsetnx', KEYS[9], ARGV[3], ARGV[4]);
+      redis.call('zadd', KEYS[7], weight, ARGV[3]);
+   else
+      redis.call('hincrby', KEYS[8], ARGV[3], weight);
+   end
 end
 
 return published;

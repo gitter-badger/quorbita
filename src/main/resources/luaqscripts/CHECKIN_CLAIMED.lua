@@ -1,4 +1,4 @@
--- Returns a list indicating if each job was checked in (1) or not (0).
+-- Returns a list indicating if each job was checked in (1) or not (0) or no longer claimed (-1).
 
 -- KEYS:
 --  (1) claimedHKey
@@ -18,9 +18,8 @@ while true do
    local id = ARGV[i];
    if id == nil then return checkins; end
 
-   local claimStamp = redis.call('hget', KEYS[1], id);
-   if claimStamp == nil or claimStamp ~= ARGV[1] then
-      checkins[j] = 0;
+   if redis.call('hget', KEYS[1], id) ~= ARGV[1] then
+      checkins[j] = -1;
    else
       checkins[j] = redis.call('hset', KEYS[1], id, ARGV[2]);
    end

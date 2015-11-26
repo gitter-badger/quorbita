@@ -1,7 +1,7 @@
 -- Returns a list indicating if each job was removed (1) or not (0).
 
 -- KEYS:
---  (1) claimedOrDeadHKey
+--  (1) claimedHKey
 --  (2) payloadsHKey
 
 -- ARGS:
@@ -10,12 +10,12 @@
 local removed = {};
 
 for i, id in pairs(ARGV) do
-   local deleteClaim = redis.call('hdel', KEYS[1], id);
-   if deleteClaim == 0 then
-      removed[i] = deleteClaim;
+
+   if redis.call('hdel', KEYS[1], id) == 0 then
+      removed[i] = 0;
    else
       redis.call('hdel', KEYS[2], id);
-      removed[i] = deleteClaim;
+      removed[i] = 1;
    end
 end
 

@@ -9,6 +9,7 @@ public class ClaimedCheckins {
   private final List<Long> checkins;
 
   public ClaimedCheckins(final ByteBuffer claimStamp, final List<Long> checkins) {
+
     this.claimStamp = claimStamp;
     this.checkins = checkins;
   }
